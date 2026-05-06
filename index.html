@@ -3,1661 +3,1335 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>週報</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<title>姓名判断 表</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans JP',sans-serif;background:#fff5f7;min-height:100vh;}
-.app{max-width:720px;margin:0 auto;padding:1.2rem 1rem 4rem;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pk-h:#fdf0f5;--pk-m:#f5d8e5;--pk-d:#e8b8cc;--pk-hd:#d494b0;--pk-t:#9a4d6a;
+  --paper:#fdf9fb;--wh:#fff;--ink:#3d2535;--ink-m:#6b4558;--ink-s:#a07888;--ink-f:#d4b8c4;
+  --gold:#b88030;--r:14px;
+  --sh:0 2px 16px rgba(180,100,130,.10),0 1px 4px rgba(180,100,130,.07);
+  --sh-h:0 6px 28px rgba(180,100,130,.18),0 2px 8px rgba(180,100,130,.10);
+  --c-ten:#4050a0;--c-jin:#b04060;--c-chi:#b88030;--c-gai:#5a6a5a;
+  --c-moku:#2a7a2a;--c-hi:#c03020;--c-do:#7a5010;--c-kin:#505080;--c-sui:#1850a0;
+}
+html{background:var(--paper);color:var(--ink);font-family:'Noto Serif JP',serif;min-height:100vh}
+body{min-height:100vh;padding-bottom:2rem}
 
-/* ── モーダル ── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem;}
-.modal-box{background:#fff;border-radius:22px;padding:2rem 1.6rem 1.8rem;max-width:400px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(255,133,162,0.35);}
-.modal-airi{margin-bottom:1rem;}
-.modal-title{font-size:18px;font-weight:700;color:#c2185b;margin-bottom:6px;}
-.modal-sub{font-size:13px;color:#888;margin-bottom:1rem;line-height:1.7;}
-.modal-label{font-size:13px;font-weight:700;color:#c2185b;text-align:left;margin-bottom:5px;margin-top:14px;}
-.modal-input{width:100%;border:2px solid #ffcdd2;border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;outline:none;color:#333;background:#fff8f9;}
-.modal-input:focus{border-color:#ff85a2;}
-.modal-hint{font-size:11px;color:#aaa;text-align:left;margin-top:4px;line-height:1.5;}
-.modal-btn{margin-top:1.4rem;width:100%;padding:14px;border-radius:24px;background:linear-gradient(135deg,#ff85a2,#f06292);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(255,133,162,0.4);}
-.modal-btn:hover{opacity:0.9;}
-.modal-btn:active{transform:scale(0.97);}
+/* パスワード画面 */
+#pw-screen{position:fixed;inset:0;z-index:9999;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem}
+.pw-box{background:var(--wh);border-radius:18px;box-shadow:0 4px 32px rgba(180,100,130,.18);padding:2.5rem 2rem 2rem;text-align:center;width:min(360px,92vw)}
+.pw-title{font-family:'Noto Serif JP',serif;font-size:1.6rem;font-weight:700;letter-spacing:.2em;color:var(--pk-t);margin-bottom:.4rem}
+.pw-sub{font-size:1.2rem;color:var(--ink-s);letter-spacing:.08em;margin-bottom:1.6rem}
+.pw-label{font-size:.78rem;color:var(--ink-m);letter-spacing:.1em;margin-bottom:.5rem;font-family:'Noto Serif JP',serif}
+.pw-input{width:100%;border:1.5px solid var(--pk-d);border-radius:10px;padding:.7rem 1rem;font-size:1.1rem;font-family:'Noto Serif JP',serif;color:var(--ink);text-align:center;letter-spacing:.3em;outline:none;background:var(--pk-h);transition:border-color .15s}
+.pw-input:focus{border-color:var(--pk-hd);background:#fff}
+.pw-btn{margin-top:1rem;width:100%;background:var(--pk-t);border:none;border-radius:10px;padding:.75rem;font-size:.95rem;color:#fff;font-family:'Noto Serif JP',serif;letter-spacing:.15em;cursor:pointer;transition:background .15s}
+.pw-btn:hover{background:var(--pk-hd)}
+.pw-err{font-size:.78rem;color:#c03020;margin-top:.6rem;min-height:1.2em;font-family:'Noto Serif JP',serif}
+.pw-deco{font-size:2.2rem;margin-bottom:.5rem}
 
-/* ── トップバー ── */
-.top-bar{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#ff85a2,#ffb6c1);border-radius:18px;padding:14px 16px;margin-bottom:0.8rem;box-shadow:0 2px 12px rgba(255,133,162,0.25);}
-.airi-block{display:flex;flex-direction:column;align-items:center;flex-shrink:0;gap:3px;}
-.airi-label{font-size:11px;font-weight:700;color:#fff;background:rgba(255,255,255,0.28);border-radius:10px;padding:2px 9px;white-space:nowrap;}
-.airi-img{width:50px;height:50px;border-radius:50%;background:#fff;border:2px solid #fff;object-fit:cover;}
-.speech{background:#fff;border-radius:14px;padding:10px 14px;font-size:13px;color:#c2185b;font-weight:500;line-height:1.6;flex:1;position:relative;border:2px solid #ffb6c1;transition:opacity 0.4s;}
-.speech::before{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);border:7px solid transparent;border-right-color:#ffb6c1;}
-.speech::after{content:'';position:absolute;left:-9px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-right-color:#fff;}
+header{background:var(--pk-m);padding:1.25rem 2rem 1rem;text-align:center;border-bottom:1px solid var(--pk-d)}
+header h1{font-family:'Noto Serif JP',serif;font-size:2.0rem;font-weight:700;letter-spacing:.25em;color:var(--pk-t)}
+header .sub{font-size:.68rem;letter-spacing:.2em;color:var(--pk-hd);margin-top:.3rem}
+header .header-restricted{font-size:1.3rem;letter-spacing:.15em;color:var(--pk-text);font-family:'Noto Serif JP',serif;font-weight:500;margin-top:.4rem}
+header .header-warning{font-size:1.02rem;letter-spacing:.08em;color:var(--pk-t);margin-top:.2rem;font-family:'Noto Serif JP',serif;font-weight:500}
+.hr{display:flex;align-items:center;gap:1rem;justify-content:center;margin-top:.7rem}
+.hr span{width:32px;height:1px;background:var(--pk-d)}
+.hr i{font-style:normal;color:var(--pk-hd);font-size:.78rem}
 
-.page-title{text-align:center;margin-bottom:1.2rem;}
-.page-title h1{font-size:22px;font-weight:700;color:#c2185b;}
+main{max-width:1000px;margin:0 auto;padding:1.5rem 1rem 3rem}
 
-.btn-row{display:flex;gap:10px;margin-bottom:1.2rem;flex-wrap:wrap;}
-.btn{padding:10px 22px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:transform 0.1s,opacity 0.15s;-webkit-tap-highlight-color:transparent;}
-.btn:active{transform:scale(0.96);}
-.btn-add{background:#ff85a2;color:#fff;box-shadow:0 2px 8px rgba(255,133,162,0.35);}
-.btn-add:hover{opacity:0.88;}
-.btn-pdf{background:#c2185b;color:#fff;box-shadow:0 2px 8px rgba(194,24,91,0.3);}
-.btn-pdf:hover{opacity:0.88;}
-.btn-pdf:disabled{opacity:0.55;cursor:not-allowed;}
-.btn-save{background:#43a047;color:#fff;box-shadow:0 2px 8px rgba(67,160,71,0.3);}
-.btn-save:hover{opacity:0.88;}
-.btn-settings{background:#ff9800;color:#fff;box-shadow:0 2px 8px rgba(255,152,0,0.3);}
-.btn-settings:hover{opacity:0.88;}
+/* 性別選択 */
+.gender-bar{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1.5rem;padding:.75rem 1rem;background:var(--wh);border-radius:var(--r);box-shadow:var(--sh)}
+.gender-bar span{font-size:.8rem;color:var(--ink-m);letter-spacing:.05em}
+.gb{border:1.5px solid var(--pk-d);border-radius:20px;padding:5px 20px;font-size:.8rem;cursor:pointer;background:var(--wh);color:var(--ink-m);font-family:'Noto Serif JP',serif;transition:all .18s}
+.gb:hover{border-color:var(--pk-hd)}
+.gb.active-m{background:#e8f0ff;border-color:#4060b0;color:#304090;font-weight:500}
+.gb.active-f{background:var(--pk-h);border-color:var(--pk-hd);color:var(--pk-t);font-weight:500}
+.gender-note{font-size:.7rem;color:var(--ink-s);padding:.3rem .8rem;border-radius:8px;min-width:140px;min-height:1.4em;font-family:'Noto Serif JP',serif}
 
-/* ── 週カード ── */
-.week-card{background:#fff;border:2px solid #ffcdd2;border-radius:18px;padding:1.2rem 1.3rem;margin-bottom:1.3rem;box-shadow:0 2px 12px rgba(255,133,162,0.1);}
-.week-badge{display:inline-block;background:#ff85a2;color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;}
-.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
-.del-week{background:none;border:1.5px solid #ffcdd2;border-radius:16px;font-size:12px;padding:5px 14px;color:#e57373;cursor:pointer;font-family:inherit;transition:all 0.15s;}
-.del-week:hover{background:#fff5f5;border-color:#e57373;}
+/* SELECT SCREEN */
+.stitle{font-family:'Noto Serif JP',serif;font-size:.9rem;font-weight:500;color:var(--ink-m);letter-spacing:.1em;text-align:center;margin-bottom:.9rem}
+.sec-h{font-size:1.36rem;letter-spacing:.08em;font-family:'Noto Serif JP',serif;font-weight:500;color:var(--pk-t);text-align:center;margin:1.2rem 0 .65rem;display:flex;align-items:center;gap:10px;justify-content:center}
+.sec-h::before,.sec-h::after{content:'';flex:1;max-width:50px;height:1px;background:var(--pk-d)}
+.tgrid{display:flex;flex-direction:column;gap:8px;max-width:480px;margin:0 auto}
+.tbtn{background:var(--wh);border:1.5px solid var(--pk-m);border-radius:var(--r);padding:.85rem 1.1rem;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left;box-shadow:var(--sh);transition:transform .18s,box-shadow .18s,border-color .18s;width:100%}
+.tbtn:hover{transform:translateY(-2px);box-shadow:var(--sh-h);border-color:var(--pk-hd)}
+.tbtn:active{transform:translateY(0)}
+.bk{width:48px;height:48px;flex-shrink:0;background:var(--pk-m);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif JP',serif;font-size:.88rem;color:var(--pk-t);line-height:1.3;text-align:center}
+.bk span{display:block}
+.bl-l{font-family:'Noto Serif JP',serif;font-size:.92rem;font-weight:500;color:var(--ink)}
+.bl-s{font-size:.67rem;color:var(--ink-s);margin-top:2px;font-family:'Noto Serif JP',serif}
+.ba{margin-left:auto;color:var(--pk-d);font-size:1.1rem;flex-shrink:0}
 
-.date-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-.date-label{font-size:13px;color:#c2185b;font-weight:600;white-space:nowrap;}
-input[type=date]{padding:8px 10px;border:1.5px solid #ffcdd2;border-radius:10px;font-size:14px;color:#333;background:#fff8f9;font-family:inherit;max-width:155px;width:100%;}
-input[type=date]:focus{outline:none;border-color:#ff85a2;}
-.sep{color:#bbb;font-size:14px;}
-.gen-btn{padding:8px 18px;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#ff85a2;color:#fff;font-family:inherit;white-space:nowrap;}
-.gen-btn:hover{opacity:0.88;}
+/* TABLE SCREEN */
+#tscr{display:none}
+.brow{display:flex;align-items:center;gap:10px;margin-bottom:1.2rem;flex-wrap:wrap}
+.bbtn{background:var(--pk-h);border:1px solid var(--pk-m);border-radius:7px;padding:5px 13px;font-size:.73rem;color:var(--pk-t);cursor:pointer;transition:background .15s;font-family:'Noto Serif JP',serif}
+.bbtn:hover{background:var(--pk-m)}
+.bbtn-reset{background:#f0f0f0;border:1px solid #ccc;border-radius:7px;padding:5px 13px;font-size:.73rem;color:#555;cursor:pointer;transition:background .15s;font-family:'Noto Serif JP',serif;margin-left:auto}
+.bbtn-reset:hover{background:#e0e0e0}
+.bbtn-back{background:#e8f0e8;border:1px solid #a8c8a8;border-radius:7px;padding:5px 13px;font-size:.73rem;color:#3a6a3a;cursor:pointer;transition:background .15s;font-family:'Noto Serif JP',serif}
+.bbtn-back:hover{background:#d0e8d0}
+.bbtn-print{background:var(--pk-t);border:none;border-radius:7px;padding:5px 15px;font-size:.73rem;color:#fff;cursor:pointer;transition:background .15s;font-family:'Noto Serif JP',serif}
+.bbtn-print:hover{background:var(--pk-hd)}
+.brow-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-left:auto}
+.tbadge{font-size:.68rem;color:var(--pk-t);border:1px solid var(--pk-d);background:var(--pk-h);border-radius:20px;padding:2px 12px;font-family:'Noto Serif JP',serif}
+.gender-badge{font-size:.68rem;border-radius:20px;padding:2px 10px;font-weight:500}
+.gb-m{background:#e8f0ff;border:1px solid #aab8e8;color:#304090}
+.gb-f{background:var(--pk-h);border:1px solid var(--pk-d);color:var(--pk-t)}
 
-.divider{border:none;border-top:2px dashed #ffcdd2;margin:14px 0;}
+/* 印刷用スタイル */
+@media print{
+  @page{size:A4 portrait;margin:18mm 10mm 8mm 10mm}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:#fff!important;padding:0!important}
+  #pw-screen{display:none!important}
+  /* ヘッダー（姓名判断・受講生専用・外部への流出は厳禁）非表示 */
+  header{display:none!important}
+  main{padding:.3rem .5rem 0!important;max-width:100%!important}
+  .gender-bar{display:none!important}
+  .brow{display:none!important}
+  .note{display:none!important}
+  #sscr{display:none!important}
+  #tscr{display:block!important}
+  .ca{gap:8px!important}
+  /* 苗字行のピンク背景を印刷時は白に */
+  .rs td{background:#fff!important}
+  /* 三才パネル：画面サイズのまま */
+  .sp{width:78px!important}
+  .sp-hd{background:var(--pk-m)!important;padding:6px 4px!important}
+  .sp-hd h2{font-size:.975rem!important}
+  .sp-it{padding:.5rem .3rem!important}
+  .sp-it .spl{font-size:.75rem!important}
+  .sp-it .spv{font-size:1.05rem!important}
+  /* 入力表：画面サイズのまま */
+  .tw{overflow:visible!important}
+  table{border-collapse:collapse!important}
+  thead tr{background:var(--pk-m)!important}
+  thead th{color:var(--pk-t)!important;padding:3px 1px!important}
+  .hantei-row td{background:#fff8fc!important}
+  /* 名前列・各セル */
+  .cn{font-size:.78rem!important}
+  .kw input{font-size:16px!important;width:36px!important;padding:2px 0!important}
+  /* 五行：select要素は印刷で矢印が出るため appearance 解除＋サイズ確保 */
+  select.gs{-webkit-appearance:none!important;appearance:none!important;font-size:1.05rem!important;width:36px!important;border:1px solid var(--pk-d)!important;padding:1px 2px!important;text-align:center!important}
+  .yy{font-size:1.05rem!important}
+  input.ni{font-size:1.05rem!important;width:28px!important}
+  .kb-l{font-size:12px!important}
+  .kb-v{font-size:1.2rem!important}
+  .kb-ht{font-size:1rem!important}
+  .so-val{font-size:1.05rem!important}
+  /* 音霊スパン */
+  span[id^="ot"]{font-size:1.05rem!important}
+  /* 判定行 */
+  .hantei-row .cn{font-size:1.05rem!important}
+  span#ot-hantei,span#yy-hantei{font-size:1.05rem!important}
+  /* 吉凶判定・バランス判定 */
+  .kk-section{margin-top:.8rem!important;box-shadow:none!important;border:1px solid var(--pk-d)!important;page-break-inside:avoid}
+  .kk-head{background:var(--pk-m)!important;padding:4px .75rem!important}
+  .kk-head h3{font-size:1.2rem!important}
+  .kk-table{font-size:14px!important}
+  .kk-table td{padding:4px 3px!important}
+  .kk-name{font-size:14px!important}
+  .kk-num{font-size:14px!important}
+  .kk-kana{font-size:14px!important}
+  .kk-desc{font-size:14px!important}
+  /* バランス判定インラインfont-size上書き */
+  td[style*="font-size:14px"]{font-size:14px!important}
+  /* 著作権 */
+  .copyright{margin-top:.5rem!important;padding:.3rem!important;border-top:1px solid var(--pk-d)!important}
+  .copyright p{font-size:.65rem!important;line-height:1.5!important}
+}
 
-/* 目標 */
-.goal-section{background:#fff8f9;border:1.5px solid #ffcdd2;border-radius:14px;padding:14px;margin-bottom:14px;}
-.goal-sec-title{font-size:14px;font-weight:700;color:#c2185b;margin-bottom:10px;}
-.goal-rows{display:flex;flex-direction:column;gap:8px;}
-.goal-row{background:#fff;border:1.5px solid #ffecef;border-radius:10px;padding:10px 12px;position:relative;}
-.goal-row-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
-.filter-label{font-size:12px;color:#c2185b;font-weight:600;white-space:nowrap;}
-select.f-sel{border:1.5px solid #ffcdd2;border-radius:8px;padding:6px 8px;font-size:12px;background:#fff8f9;color:#333;font-family:inherit;cursor:pointer;outline:none;max-width:130px;}
-select.f-sel:focus{border-color:#ff85a2;}
-.btn-add-custom{font-size:11px;padding:5px 10px;border-radius:10px;border:1.5px solid #ff85a2;background:#fff;color:#ff85a2;cursor:pointer;font-family:inherit;white-space:nowrap;}
-.btn-add-custom:hover{background:#fff0f3;}
-textarea.goal-text{width:100%;border:1.5px solid #ffcdd2;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff;color:#333;font-family:inherit;resize:none;min-height:48px;line-height:1.6;outline:none;}
-textarea.goal-text:focus{border-color:#ff85a2;}
-.btn-remove-goal{position:absolute;top:8px;right:8px;background:none;border:none;color:#ffb6c1;cursor:pointer;font-size:16px;padding:2px 5px;line-height:1;}
-.btn-remove-goal:hover{color:#e57373;}
-.btn-add-goal{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px dashed #ff85a2;background:#fff;color:#ff85a2;font-family:inherit;margin-top:6px;width:fit-content;}
-.btn-add-goal:hover{background:#fff0f3;}
+/* CONTENT */
+.ca{display:flex;gap:12px;align-items:flex-start}
+.tw{flex:1;min-width:0;overflow-x:auto;border-radius:var(--r);box-shadow:var(--sh)}
 
-/* カスタムモーダル */
-.custom-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9500;align-items:center;justify-content:center;padding:1rem;}
-.custom-modal.show{display:flex;}
-.custom-box{background:#fff;border-radius:18px;padding:1.4rem;max-width:340px;width:100%;text-align:center;box-shadow:0 6px 30px rgba(255,133,162,0.3);}
-.custom-box h3{font-size:15px;font-weight:700;color:#c2185b;margin-bottom:10px;}
-.custom-box p{font-size:12px;color:#888;margin-bottom:12px;}
-.custom-box select,.custom-box input{width:100%;border:1.5px solid #ffcdd2;border-radius:10px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none;background:#fff8f9;margin-bottom:8px;}
-.custom-btns{display:flex;gap:8px;margin-top:6px;}
-.custom-btns button{flex:1;padding:10px;border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
-.custom-ok{background:#ff85a2;color:#fff;}
-.custom-cancel{background:#f5f5f5;color:#888;}
+/* 三才パネル */
+.sp{flex-shrink:0;width:78px;background:var(--wh);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.sp-hd{background:var(--pk-m);padding:6px 4px;text-align:center}
+.sp-hd h2{font-family:'Noto Serif JP',serif;font-size:.975rem;font-weight:500;color:var(--pk-t);letter-spacing:.08em}
+.sp-body{display:flex;flex-direction:column}
+.sp-it{padding:.75rem .3rem;text-align:center;border-bottom:1px solid var(--pk-h)}
+.sp-it:last-child{border-bottom:none}
+.sp-it .spl{font-size:.75rem;color:var(--ink-s);letter-spacing:.1em;margin-bottom:3px;font-family:'Noto Serif JP',serif}
+.sp-it .spv{font-family:'Noto Serif JP',serif;font-size:1.05rem;font-weight:700}
+/* sp spv colors set dynamically by JS */
 
-/* 日カード */
-.daily-label-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
-.daily-label{font-size:17.5px;font-weight:700;color:#c2185b;margin-bottom:0;}
-.goal-sec-title{font-size:17.5px;font-weight:700;color:#c2185b;margin-bottom:10px;}
-@media print{.goal-sec-title,.daily-label{font-size:17.5px!important;}}
-.day-card{border:1.5px solid #ffecef;border-radius:12px;margin-bottom:10px;overflow:hidden;}
-.day-header{display:flex;align-items:center;gap:10px;background:#fff8f9;padding:10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
-.day-header:hover{background:#fff0f3;}
-.day-name{font-size:14px;font-weight:700;color:#333;}
-.day-dot{width:10px;height:10px;border-radius:50%;background:#ffcdd2;margin-left:auto;flex-shrink:0;}
-.day-dot.filled{background:#ff85a2;}
-.day-arr{font-size:11px;color:#ccc;margin-left:6px;display:inline-block;transition:transform 0.2s;}
-.day-body{padding:12px 14px;display:none;border-top:1.5px dashed #ffecef;}
-.day-body.open{display:block;}
+/* TABLE */
+table{width:100%;border-collapse:collapse;background:var(--wh);font-size:1rem}
+thead tr{background:var(--pk-m)}
+thead th{padding:3px 0;color:var(--pk-t);font-weight:500;font-size:.975rem;letter-spacing:0;white-space:nowrap;border-right:1px solid var(--pk-d)}
+thead th:last-child{border-right:none}
+td{border-bottom:1px solid var(--pk-h);border-right:1px solid var(--pk-h);padding:4px 0;text-align:center;vertical-align:middle;color:var(--ink)}
+td:last-child{border-right:none}
+tbody tr:last-child td{border-bottom:none}
+.rs td{background:#fce8f2}.rn td{background:var(--wh)}.rt td{background:var(--pk-h)}
+.rj td{background:#f5f8ff}
+.cn{font-family:'Noto Serif JP',serif;font-size:.78rem;font-weight:500;color:var(--ink-m);text-align:center;padding-left:0;white-space:nowrap;min-width:0;width:32px;max-width:34px}
 
-.plan-item{background:#fff8f9;border:1.5px solid #ffecef;border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative;}
-.plan-item-head{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px;align-items:center;}
-.plan-sel{border:1.5px solid #ffcdd2;border-radius:8px;padding:5px 8px;font-size:12px;background:#fff;color:#333;font-family:inherit;cursor:pointer;outline:none;}
-.plan-sel:focus{border-color:#ff85a2;}
-.btn-remove-plan{background:none;border:none;color:#ffb6c1;cursor:pointer;font-size:15px;margin-left:auto;padding:2px 4px;line-height:1;flex-shrink:0;}
-.btn-remove-plan:hover{color:#e57373;}
-.field-label{font-size:12px;font-weight:600;color:#c2185b;margin-bottom:4px;margin-top:8px;}
-.field-label:first-child{margin-top:0;}
-textarea.field{width:100%;border:1.5px solid #ffcdd2;border-radius:10px;padding:9px 12px;font-size:14px;background:#fff;color:#333;font-family:inherit;resize:none;min-height:56px;line-height:1.6;outline:none;}
-textarea.field:focus{border-color:#ff85a2;}
-.btn-add-plan{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px dashed #ff85a2;background:#fff;color:#ff85a2;font-family:inherit;margin-top:6px;}
-.btn-add-plan:hover{background:#fff0f3;}
+/* 漢字入力 */
+.kw{display:flex;flex-direction:column;align-items:center;gap:2px}
+.kw input{width:40px;border:none;background:rgba(208,140,168,.08);border-radius:3px;text-align:center;font-size:19px;font-family:'Noto Serif JP',serif;color:var(--ink);padding:3px 0;outline:none;transition:background .15s}
+.kw input:focus{background:#fef0f6;box-shadow:0 0 0 1.5px var(--pk-hd)}
+.sb{display:none}
 
-.achieve-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;}
-.achieve-lbl{font-size:12px;font-weight:600;color:#c2185b;}
-.achieve-sel{border:1.5px solid #ffcdd2;border-radius:8px;padding:6px 10px;font-size:13px;background:#fff8f9;color:#333;font-family:inherit;cursor:pointer;outline:none;}
+/* 五行 */
+select.gs{border:1px solid var(--pk-m);border-radius:3px;background:var(--wh);font-size:1.05rem;color:var(--ink-m);padding:2px 1px;cursor:pointer;outline:none;width:40px;font-family:'Noto Serif JP',serif;}
+select.gs:focus{border-color:var(--pk-hd)}
+.gm{color:var(--c-moku);font-weight:500}.gh{color:var(--c-hi);font-weight:500}
+.gd{color:var(--c-do);font-weight:500}.gk{color:var(--c-kin);font-weight:500}
+.gw{color:var(--c-sui);font-weight:500}
 
-/* 結果 */
-.result-section{background:linear-gradient(135deg,#fff0f3,#fff8f9);border:2px solid #ffcdd2;border-radius:14px;padding:14px;margin-top:14px;}
-.result-title{font-size:14px;font-weight:700;color:#c2185b;margin-bottom:12px;}
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.result-item{background:#fff;border:1.5px solid #ffecef;border-radius:10px;padding:10px 12px;}
-.result-item-label{font-size:11px;font-weight:600;color:#c2185b;margin-bottom:5px;}
-.result-input-wrap{display:flex;align-items:center;gap:4px;}
-.result-num{width:100%;border:1.5px solid #ffcdd2;border-radius:8px;padding:7px 10px;font-size:15px;font-family:inherit;outline:none;background:#fff8f9;color:#333;text-align:right;}
-.result-num:focus{border-color:#ff85a2;}
-.result-unit{font-size:13px;color:#888;white-space:nowrap;}
-.sort-btns{display:flex;gap:4px;flex-shrink:0;}
-.sort-btn{background:#fff;border:1.5px solid #ffcdd2;border-radius:8px;padding:4px 10px;font-size:13px;cursor:pointer;color:#c2185b;line-height:1;}
-.sort-btn:hover{background:#fff0f3;}
-.week-card{transition:box-shadow 0.15s;}
+/* 音霊 */
+.otodama-cell input{width:44px;border:none;background:rgba(208,140,168,.06);border-radius:4px;text-align:center;font-size:1.05rem;font-family:'Noto Serif JP',serif;color:var(--ink-m);padding:3px 2px;outline:none}
+.otodama-cell input:focus{background:#fef0f6;box-shadow:0 0 0 1px var(--pk-hd)}
 
-/* PDF オーバーレイ */
-.pdf-overlay{display:none;position:fixed;inset:0;background:rgba(255,133,162,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;}
-.pdf-overlay.show{display:flex;}
-.loader{width:48px;height:48px;border:5px solid #fff;border-bottom-color:transparent;border-radius:50%;display:inline-block;animation:rotation 1s linear infinite;margin-bottom:20px;}
-@keyframes rotation{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+/* 陰陽 */
+.yy{font-size:1.05rem;font-weight:500;white-space:nowrap;display:block;min-width:0}
+.yyo{color:var(--ink)}.yyi{color:var(--ink)}
 
-/* PDF 生成用隠しエリア */
-#pdf-print-area{position:fixed;left:-9999px;top:0;width:794px;font-family:'Noto Sans JP',sans-serif;background:#fff;z-index:-1;}
-.pdf-page{width:794px;min-height:1123px;background:#fff;padding:48px 52px;color:#333;position:relative;box-sizing:border-box;font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.7;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.pdf-doc-title{text-align:center;border-bottom:3px solid #ff85a2;padding-bottom:16px;margin-bottom:16px;}
-.pdf-doc-title h2{color:#c2185b;font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:0.5px;}
-.pdf-doc-meta{text-align:center;font-size:11px;color:#aaa;margin-bottom:16px;}
-.pdf-week-header{background:#ff85a2;border-radius:8px;padding:8px 16px;margin-bottom:16px;}
-.pdf-week-header h3{color:#fff;font-size:14px;font-weight:700;}
-.pdf-section-title{font-size:13px;font-weight:700;color:#c2185b;margin:16px 0 8px;border-left:4px solid #ff85a2;padding-left:10px;}
-.pdf-goal-item{margin-bottom:8px;padding:8px 12px;background:#fff8f9;border-radius:6px;border:1px solid #ffecef;}
-.pdf-goal-tag{font-size:10px;font-weight:700;color:#ff85a2;margin-bottom:3px;}
-.pdf-goal-text{font-size:12px;line-height:1.7;color:#333;white-space:pre-wrap;word-break:break-all;}
-.pdf-day-block{border:1px solid #ffecef;border-radius:8px;margin-bottom:8px;overflow:hidden;}
-.pdf-day-name{background:#fff8f9;padding:7px 12px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
-.pdf-day-name.weekend{color:#c2185b;}
-.pdf-day-ach{font-size:10px;color:#888;font-weight:400;}
-.pdf-day-content{padding:8px 12px;}
-.pdf-plan-row{margin-bottom:5px;font-size:11.5px;line-height:1.6;}
-.pdf-plan-tag{display:inline-block;color:#ff85a2;font-weight:700;margin-right:6px;white-space:nowrap;}
-.pdf-plan-text{display:inline;color:#333;white-space:pre-wrap;word-break:break-all;}
-.pdf-note-row{margin-top:6px;padding-top:6px;border-top:1px dashed #eee;}
-.pdf-note-label{font-size:10px;font-weight:700;color:#c2185b;margin-bottom:3px;}
-.pdf-note-text{font-size:11px;line-height:1.6;color:#555;white-space:pre-wrap;word-break:break-all;}
-.pdf-review-box{background:#fdfdfd;border:1px solid #eee;border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.8;color:#333;white-space:pre-wrap;word-break:break-all;}
-.pdf-result-box{background:#fff8f9;border:1px solid #ffecef;border-radius:6px;padding:10px 12px;}
-.pdf-result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;}
-.pdf-result-cell{background:#fff;padding:8px 6px;border-radius:6px;text-align:center;border:1px solid #ffecef;}
-.pdf-result-cell-label{font-size:10px;color:#c2185b;font-weight:700;margin-bottom:4px;}
-.pdf-result-cell-val{font-size:13px;font-weight:700;color:#333;}
-.pdf-page-num{position:absolute;bottom:24px;right:52px;font-size:10px;color:#ccc;}
-.pdf-no-record{font-size:11px;color:#bbb;}
+/* 画数 */
+input.ni{width:30px;border:none;background:rgba(208,140,168,.08);border-radius:3px;text-align:center;font-size:1.05rem;font-family:'Noto Serif JP',serif;color:var(--ink);padding:2px 0;outline:none;-moz-appearance:textfield}
+input.ni::-webkit-inner-spin-button{display:none}
+input.ni:focus{background:#fef0f6;box-shadow:0 0 0 1px var(--pk-hd)}
 
-@media (max-width: 480px) {
-  .btn-row{flex-direction:column;}
-  .btn{width:100%;text-align:center;}
+/* 格ボックス: 天・人・地・外 同一列 */
+.kaku-col{vertical-align:top;padding:0;width:58px;min-width:54px}
+.kaku-boxes{display:flex;flex-direction:column;height:100%}
+.kb{border-bottom:1px solid var(--pk-h);padding:3px 2px;text-align:center;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:2px;flex:1}
+.kb:last-child{border-bottom:none}
+.kb-ht{font-family:'Noto Serif JP',serif;font-size:1rem;font-weight:700;margin-left:1px;flex-shrink:0}
+.kb-l{font-size:12px;letter-spacing:.01em;font-family:'Noto Serif JP',serif;flex-shrink:0;min-width:10px}
+.kb-sp{display:inline-block;width:.3em}
+.kb-v{font-family:'Noto Serif JP',serif;font-size:1.2rem;font-weight:700;line-height:1}
+.kb-ten .kb-l{color:var(--ink)}.kb-ten .kb-v{color:var(--ink)}
+.kb-jin .kb-l{color:var(--ink)}.kb-jin .kb-v{color:var(--ink)}
+.kb-chi .kb-l{color:var(--ink)}.kb-chi .kb-v{color:var(--ink)}
+.kb-gai .kb-l{color:var(--ink)}.kb-gai .kb-v{color:var(--ink)}
+
+/* 音霊マス均等表示：各マスは隣接行の境界線を中心にまたがる */
+.ot-col{padding:0;width:24px}
+.ot-boxes{display:flex;flex-direction:column;width:100%;box-sizing:border-box}
+.ot-box{display:flex;align-items:center;justify-content:center;border-bottom:1px solid #fff;background:rgba(208,140,168,.04)}
+.ot-box:last-child{border-bottom:none}
+.ot-box span{font-size:1.05rem;font-weight:700;font-family:'Noto Serif JP',serif;color:var(--ink-f)}
+
+/* 判定行 */
+.hantei-row td{background:#fff8fc}
+.ht-val{font-family:'Noto Serif JP',serif;font-weight:700}
+.ht-name{font-size:.65rem;color:var(--ink-s);display:block;margin-bottom:0}
+
+/* 吉凶マーク */
+.mk-maru{color:#1a7a2a;font-weight:700}.mk-sank{color:#c03020;font-weight:700}.mk-batu{color:#c03020;font-weight:700}
+
+/* メモ欄 */
+.memo-area{margin-top:1.5rem}
+.memo-label{font-size:.72rem;color:var(--ink-s);letter-spacing:.08em;margin-bottom:4px;font-family:'Noto Serif JP',serif}
+.memo-area textarea{width:100%;border:1px solid var(--pk-d);border-radius:8px;padding:.6rem .75rem;font-size:.78rem;font-family:'Noto Serif JP',serif;color:var(--ink);resize:vertical;outline:none;background:var(--wh);min-height:80px}
+.memo-area textarea:focus{border-color:var(--pk-hd);box-shadow:0 0 0 1.5px var(--pk-h)}
+
+/* 吉凶一覧 */
+.kk-section{margin-top:1.5rem;background:var(--wh);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.kk-head{background:var(--pk-m);padding:5px .75rem}
+.kk-head h3{font-family:'Noto Serif JP',serif;font-size:1.584rem;font-weight:500;color:var(--pk-t);letter-spacing:.1em}
+.kk-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:auto}
+.kk-table td{padding:5px 3px;border-bottom:1px solid var(--pk-h);vertical-align:middle;line-height:1.5;text-align:left}
+.kk-table tr:last-child td{border-bottom:none}
+.kk-name{white-space:nowrap;font-family:'Noto Serif JP',serif;font-weight:500;color:var(--ink-m);width:60px;min-width:60px;font-size:14px;vertical-align:middle;padding:5px 6px;text-align:center}
+.kk-num{font-family:'Noto Serif JP',serif;font-weight:700;font-size:14px;width:70px;min-width:70px;white-space:nowrap;vertical-align:middle;padding:5px 4px 5px 10px}
+.kk-kana{font-size:14px;color:var(--ink-m);width:70px;min-width:70px;white-space:nowrap;vertical-align:middle}
+.kk-desc{color:var(--ink-m);line-height:1.5;font-size:14px;padding-left:0}
+
+/* 著作権 */
+.copyright{margin-top:2rem;text-align:center;padding:.8rem;border-top:1px solid var(--pk-d)}
+.copyright p{font-size:.85rem;color:var(--ink-s);letter-spacing:.04em;line-height:2}
+
+/* 五行カラー for sansai */
+.gc-moku{color:var(--c-moku)}.gc-hi{color:var(--c-hi)}.gc-do{color:var(--c-do)}
+.gc-kin{color:var(--c-kin)}.gc-sui{color:var(--c-sui)}
+
+/* note */
+.note{margin-top:.9rem;text-align:center;font-size:.65rem;color:var(--ink-f);letter-spacing:.04em}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeUp .3s ease both}
+.d1{animation-delay:.04s}.d2{animation-delay:.08s}.d3{animation-delay:.12s}
+.d4{animation-delay:.16s}.d5{animation-delay:.20s}.d6{animation-delay:.24s}.d7{animation-delay:.28s}.d8{animation-delay:.32s}
+
+@media(max-width:660px){
+  .ca{flex-direction:column}
+  .sp{width:100%;display:flex;flex-direction:row}
+  .sp-body{flex-direction:row;width:100%}
+  .sp-it{flex:1;border-bottom:none;border-right:1px solid var(--pk-h)}
+  .sp-it:last-child{border-right:none}
+  header h1{font-size:1.35rem}
+  main{padding:1.2rem .75rem 2.5rem}
 }
 </style>
 </head>
 <body>
-
-<div id="setup-modal" class="modal-bg">
-  <div class="modal-box">
-    <div class="modal-airi"><img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663589389219/xBCQBJZxRzvfVNcR.png" width="80" height="80" alt="あいり先生" style="border-radius:50%;"></div>
-    <div class="modal-title">はじめまして！あいりです。</div>
-    <div class="modal-sub">週報で計画的に動きましょう！🌸<br>あなたのことを教えてね</div>
-    
-    <div class="modal-label">お名前</div>
-    <input type="text" id="name-input" class="modal-input" placeholder="例：花子">
-    
-    <div class="modal-label">わたしになんて呼ばれてる？</div>
-    <input type="text" id="nickname-input" class="modal-input" placeholder="例：はなちゃん">
-    
-    <div class="modal-label">今のお仕事・肩書き</div>
-    <input type="text" id="job-input" class="modal-input" placeholder="例：SNSマーケター">
-    <div class="modal-hint">※空欄でも大丈夫だよ！</div>
-    
-    <button class="modal-btn" onclick="startApp()">はじめる！</button>
+<!-- パスワード画面 -->
+<div id="pw-screen">
+  <div class="pw-box">
+    <div class="pw-deco">🌸</div>
+    <div class="pw-title">姓名判断</div>
+    <div class="pw-sub">受講生専用</div>
+    <div class="pw-label">パスワードを入力してください</div>
+    <input class="pw-input" type="password" id="pw-input" maxlength="20" placeholder=""
+      onkeydown="if(event.key==='Enter')checkPW()">
+    <button class="pw-btn" onclick="checkPW()">開　く</button>
+    <div class="pw-err" id="pw-err"></div>
   </div>
 </div>
-
-<div id="custom-modal" class="custom-modal">
-  <div class="custom-box">
-    <h3>✏️ 新しい項目を追加</h3>
-    <p>追加する種類を選んでね🌸</p>
-    <select id="custom-type-sel" onchange="toggleCustomType()">
-      <option value="category">カテゴリを新しく追加</option>
-      <option value="platform">既存カテゴリに媒体を追加</option>
-    </select>
-    <div id="custom-platform-cat-row" style="display:none;margin-top:8px;">
-      <label style="font-size:12px;color:#c2185b;font-weight:600;">追加先のカテゴリ</label>
-      <select id="custom-platform-cat-sel" style="width:100%;border:1.5px solid #ffcdd2;border-radius:10px;padding:8px 10px;font-size:14px;font-family:inherit;margin-top:4px;background:#fff8f9;outline:none;"></select>
-    </div>
-    <input type="text" id="custom-name-input" placeholder="新しい名前を入力..." style="margin-top:8px;">
-    <div class="custom-btns">
-      <button class="custom-cancel" onclick="closeCustomModal()">キャンセル</button>
-      <button class="custom-ok" onclick="saveCustomItem()">追加する</button>
-    </div>
-  </div>
-</div>
-
-<!-- 削除モーダル -->
-<div id="delete-modal" class="custom-modal">
-  <div class="custom-box">
-    <h3>🗑 項目を削除</h3>
-    <p>削除する種類を選んでね</p>
-    <select id="delete-type-sel" onchange="updateDeleteList()">
-      <option value="category">カテゴリを削除</option>
-      <option value="platform">媒体を削除</option>
-    </select>
-    <div id="delete-platform-cat-row" style="display:none;margin-top:8px;">
-      <label style="font-size:12px;color:#c2185b;font-weight:600;">カテゴリを選択</label>
-      <select id="delete-platform-cat-sel" onchange="updateDeleteList()" style="width:100%;border:1.5px solid #ffcdd2;border-radius:10px;padding:8px 10px;font-size:14px;font-family:inherit;margin-top:4px;background:#fff8f9;outline:none;"></select>
-    </div>
-    <div style="margin-top:8px;">
-      <label style="font-size:12px;color:#c2185b;font-weight:600;">削除する項目を選択</label>
-      <select id="delete-item-sel" style="width:100%;border:1.5px solid #ffcdd2;border-radius:10px;padding:8px 10px;font-size:14px;font-family:inherit;margin-top:4px;background:#fff8f9;outline:none;"></select>
-    </div>
-    <div class="custom-btns" style="margin-top:12px;">
-      <button class="custom-cancel" onclick="closeDeleteModal()">キャンセル</button>
-      <button class="custom-ok" style="background:#e57373;" onclick="executeDelete()">削除する</button>
-    </div>
-  </div>
-</div>
-
-<div class="app" id="main-app" style="display:none;">
-  <div class="top-bar">
-    <div class="airi-block" onclick="openSettings()" style="cursor:pointer;">
-      <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663589389219/xBCQBJZxRzvfVNcR.png" class="airi-img" alt="あいり先生">
-      <span class="airi-label">あいり先生</span>
-    </div>
-    <div class="speech" id="airi-msg"></div>
+<header>
+  <h1>姓名判断</h1>
+  <p class="header-restricted">受講生専用</p>
+  <p class="header-warning">外部への流出は厳禁</p>
+</header>
+<main>
+  <!-- 性別 -->
+  <div class="gender-bar">
+    <span>性別：</span>
+    <button class="gb" id="gb-m" onclick="setGender('男')">男性</button>
+    <button class="gb" id="gb-f" onclick="setGender('女')">女性</button>
+    <span class="gender-note" id="gnote"></span>
   </div>
 
-  <div class="page-title"><h1 id="main-title">週報</h1></div>
-
-  <div class="btn-row">
-    <button class="btn btn-add" onclick="addWeek()">＋ 新しい週を追加</button>
-    <button class="btn btn-pdf" id="pdf-btn" onclick="generatePDF()">📄 PDFを作成・保存</button>
-    <button class="btn btn-save" onclick="saveLocal()">💾 下書きを保存</button>
-    <button class="btn btn-settings" onclick="openSettings()">⚙️ 設定を変更</button>
+  <!-- SELECT -->
+  <div id="sscr">
+    <p class="stitle">名前のタイプを選んでください</p>
+    <div class="sec-h">２文字</div>
+    <div class="tgrid">
+      <button class="tbtn anim d1" onclick="showTable('1-1')">
+        <div class="bk"><span>苗１</span><span>名１</span></div>
+        <div><div class="bl-l">苗字１文字　名前１文字</div><div class="bl-s">2文字</div></div>
+        <div class="ba">›</div>
+      </button>
+    </div>
+    <div class="sec-h">３文字</div>
+    <div class="tgrid">
+      <button class="tbtn anim d2" onclick="showTable('1-2')">
+        <div class="bk"><span>苗１</span><span>名２</span></div>
+        <div><div class="bl-l">苗字１文字　名前２文字</div><div class="bl-s">3文字（名前が2文字）</div></div>
+        <div class="ba">›</div>
+      </button>
+      <button class="tbtn anim d3" onclick="showTable('2-1')">
+        <div class="bk"><span>苗２</span><span>名１</span></div>
+        <div><div class="bl-l">苗字２文字　名前１文字</div><div class="bl-s">3文字（名前が1文字）</div></div>
+        <div class="ba">›</div>
+      </button>
+    </div>
+    <div class="sec-h">４文字</div>
+    <div class="tgrid">
+      <button class="tbtn anim d4" onclick="showTable('2-2')">
+        <div class="bk"><span>苗２</span><span>名２</span></div>
+        <div><div class="bl-l">苗字２文字　名前２文字</div><div class="bl-s">4文字（名前が2文字）</div></div>
+        <div class="ba">›</div>
+      </button>
+      <button class="tbtn anim d5" onclick="showTable('3-1')">
+        <div class="bk"><span>苗３</span><span>名１</span></div>
+        <div><div class="bl-l">苗字３文字　名前１文字</div><div class="bl-s">4文字（名前が1文字）</div></div>
+        <div class="ba">›</div>
+      </button>
+      <button class="tbtn anim d6" onclick="showTable('1-3')">
+        <div class="bk"><span>苗１</span><span>名３</span></div>
+        <div><div class="bl-l">苗字１文字　名前３文字</div><div class="bl-s">4文字（名前が3文字）</div></div>
+        <div class="ba">›</div>
+      </button>
+    </div>
+    <div class="sec-h">５文字</div>
+    <div class="tgrid">
+      <button class="tbtn anim d7" onclick="showTable('2-3')">
+        <div class="bk"><span>苗２</span><span>名３</span></div>
+        <div><div class="bl-l">苗字２文字　名前３文字</div><div class="bl-s">5文字（名前が3文字）</div></div>
+        <div class="ba">›</div>
+      </button>
+      <button class="tbtn anim d8" onclick="showTable('3-2')">
+        <div class="bk"><span>苗３</span><span>名２</span></div>
+        <div><div class="bl-l">苗字３文字　名前２文字</div><div class="bl-s">5文字（名前が2文字）</div></div>
+        <div class="ba">›</div>
+      </button>
+    </div>
   </div>
 
-  <div id="weeks"></div>
-</div>
+  <!-- TABLE -->
+  <div id="tscr">
+    <div class="brow">
+      <span class="tbadge" id="tbadge"></span>
+      <span class="gender-badge" id="gbadge"></span>
+      <div class="brow-right">
+        <button class="bbtn-print" onclick="window.print()">🖨 印刷</button>
+        <button class="bbtn-reset" onclick="resetInputs()">リセット</button>
+        <button class="bbtn-back" onclick="goBack()">表紙に戻る</button>
+      </div>
+    </div>
+    <div class="ca">
+      <div class="tw"><div id="ta"></div></div>
+      <div class="sp">
+        <div class="sp-hd"><h2>三才</h2></div>
+        <div class="sp-body">
+          <div class="sp-it sp-ten"><div class="spl">天</div><div class="spv" id="st">—</div></div>
+          <div class="sp-it sp-jin"><div class="spl">人</div><div class="spv" id="sj">—</div></div>
+          <div class="sp-it sp-chi"><div class="spl">地</div><div class="spv" id="sc">—</div></div>
+          <div class="sp-it" style="background:#fff8fc"><div class="spl" style="font-size:.75rem">判定</div><div class="spv" id="sp-hantei" style="font-size:1.15rem">—</div></div>
+          <div class="sp-it" style="background:#fff0f7"><div class="spl" style="font-size:.75rem">吉凶</div><div class="spv" id="sp-kk" style="font-size:1.15rem">—</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">漢字入力で画数・五行が自動入力（人名漢字表ベース）　陰陽は画数から自動計算　音霊は手動入力</p>
 
-<div id="pdf-overlay" class="pdf-overlay">
-  <span class="loader"></span>
-  <div id="pdf-overlay-text" style="font-weight:700;font-size:18px;">準備中...</div>
-  <div style="margin-top:10px;font-size:13px;opacity:0.8;">※しばらく時間がかかることがあります</div>
-</div>
+    <!-- 吉凶一覧 -->
+    <div class="kk-section" id="kk-section">
+      <div class="kk-head"><h3>吉凶判定</h3></div>
+      <table class="kk-table">
+        <tr><td class="kk-name">人格</td><td class="kk-num" id="kk-jin-num">—</td><td class="kk-kana" id="kk-jin-kana"></td><td class="kk-desc" id="kk-jin-desc">—</td></tr>
+        <tr><td class="kk-name">総格</td><td class="kk-num" id="kk-so-num">—</td><td class="kk-kana" id="kk-so-kana"></td><td class="kk-desc" id="kk-so-desc">—</td></tr>
+        <tr><td class="kk-name">地格</td><td class="kk-num" id="kk-chi-num">—</td><td class="kk-kana" id="kk-chi-kana"></td><td class="kk-desc" id="kk-chi-desc">—</td></tr>
+        <tr><td class="kk-name">外格</td><td class="kk-num" id="kk-gai-num">—</td><td class="kk-kana" id="kk-gai-kana"></td><td class="kk-desc" id="kk-gai-desc">—</td></tr>
+        <tr><td class="kk-name">天格</td><td class="kk-num" id="kk-ten-num">—</td><td class="kk-kana" id="kk-ten-kana"></td><td class="kk-desc" id="kk-ten-desc">—</td></tr>
+      </table>
+    </div>
 
-<div id="pdf-print-area"></div>
+    <!-- バランス判定テーブル -->
+    <div class="kk-section" style="margin-top:1rem">
+      <div class="kk-head"><h3>バランス判定</h3></div>
+      <table class="kk-table">
+        <tbody>
+          <tr>
+            <td class="kk-name">三才配置</td>
+            <td id="bl-sansai-kk" style="text-align:center;padding:5px 6px;min-width:40px;vertical-align:middle;font-size:14px">—</td>
+            <td id="bl-sansai-desc" class="kk-desc" style="white-space:pre-wrap;font-size:14px;padding:5px 3px"></td>
+          </tr>
+          <tr>
+            <td class="kk-name">陰陽配列</td>
+            <td id="bl-yy-kk" style="text-align:center;padding:5px 6px;min-width:40px;vertical-align:middle;font-size:14px">—</td>
+            <td id="bl-yy-desc" class="kk-desc" style="font-size:14px;padding:5px 3px"></td>
+          </tr>
+          <tr>
+            <td class="kk-name">音霊</td>
+            <td id="bl-ot-kk" style="text-align:center;padding:5px 6px;min-width:40px;vertical-align:middle;font-size:14px">—</td>
+            <td id="bl-ot-desc" class="kk-desc" style="font-size:14px;padding:5px 3px"></td>
+          </tr>
+          <tr style="background:var(--pk-h)">
+            <td class="kk-name" style="font-weight:700;color:var(--pk-t);font-size:18px">判定</td>
+            <td id="bl-balance-kk" style="text-align:center;padding:4px 8px;font-size:18px;font-weight:700">—</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<!-- 著作権 -->
+<div class="copyright">
+  <p>© 2026 Itoha Ohnishi All rights reserved.</p>
+  <p>本ツールは受講生専用です。無断転載・転送・第三者への共有を固く禁じます。</p>
+  <p>この画面を印刷したものを第三者へ配布することを固く禁じます。</p>
+</div>
 
 <script>
-let wc=0;
-let userName='', nickname='', jobName='';
-const DAYS_JP=['日','月','火','水','木','金','土'];
-let CATEGORIES=['SNS','ブログ・HP','広告・集客','その他'];
-let PLATFORMS={
-  'SNS':['Instagram','X(Twitter)','Facebook','TikTok','YouTube','Pinterest'],
-  'ブログ・HP':['WordPress','note','アメブロ','自社サイト'],
-  '広告・集客':['Google広告','Meta広告','公式LINE','メルマガ'],
-  'その他':['事務作業','ミーティング','制作','学習']
+let CT=null, GENDER=null;
+
+const KDB={"ト":{"s":2,"g":"水"},"一":{"s":1,"g":"土"},"丁":{"s":2,"g":"火"},"七":{"s":2,"g":"金"},"万":{"s":3,"g":"水"},"丈":{"s":3,"g":"金"},"三":{"s":3,"g":"金"},"上":{"s":3,"g":"金"},"下":{"s":3,"g":"木"},"不":{"s":4,"g":"水"},"与":{"s":3,"g":"土"},"丑":{"s":4,"g":"火"},"且":{"s":5,"g":"金"},"世":{"s":5,"g":"金"},"丘":{"s":5,"g":"木"},"丙":{"s":5,"g":"水"},"丞":{"s":6,"g":"木"},"両":{"s":6,"g":"火"},"並":{"s":8,"g":"水"},"中":{"s":4,"g":"火"},"串":{"s":7,"g":"木"},"丸":{"s":3,"g":"木"},"丹":{"s":4,"g":"火"},"主":{"s":5,"g":"金"},"乃":{"s":2,"g":"火"},"久":{"s":3,"g":"木"},"之":{"s":3,"g":"金"},"乏":{"s":4,"g":"水"},"乗":{"s":9,"g":"金"},"乙":{"s":1,"g":"土"},"九":{"s":2,"g":"木"},"也":{"s":3,"g":"土"},"乱":{"s":7,"g":"火"},"乳":{"s":8,"g":"火"},"乾":{"s":11,"g":"木"},"亀":{"s":11,"g":"木"},"了":{"s":2,"g":"火"},"予":{"s":4,"g":"土"},"争":{"s":6,"g":"木"},"事":{"s":8,"g":"金"},"二":{"s":2,"g":"金"},"云":{"s":4,"g":"土"},"互":{"s":4,"g":"木"},"五":{"s":4,"g":"木"},"井":{"s":4,"g":"金"},"亘":{"s":6,"g":"木"},"亙":{"s":6,"g":"木"},"些":{"s":8,"g":"金"},"亜":{"s":7,"g":"土"},"亡":{"s":3,"g":"水"},"交":{"s":6,"g":"木"},"亥":{"s":6,"g":"木"},"亦":{"s":6,"g":"土"},"亨":{"s":7,"g":"木"},"享":{"s":8,"g":"木"},"京":{"s":8,"g":"木"},"亭":{"s":9,"g":"火"},"亮":{"s":9,"g":"火"},"人":{"s":2,"g":"金"},"仁":{"s":4,"g":"金"},"今":{"s":4,"g":"木"},"介":{"s":4,"g":"木"},"仏":{"s":4,"g":"水"},"仔":{"s":5,"g":"金"},"仕":{"s":5,"g":"金"},"他":{"s":5,"g":"火"},"付":{"s":5,"g":"水"},"仙":{"s":5,"g":"金"},"代":{"s":5,"g":"火"},"令":{"s":5,"g":"火"},"以":{"s":5,"g":"土"},"仮":{"s":6,"g":"木"},"仰":{"s":6,"g":"木"},"仲":{"s":6,"g":"火"},"件":{"s":6,"g":"木"},"任":{"s":6,"g":"火"},"企":{"s":6,"g":"木"},"伊":{"s":6,"g":"土"},"伍":{"s":6,"g":"木"},"伎":{"s":6,"g":"木"},"伏":{"s":6,"g":"水"},"伐":{"s":6,"g":"水"},"休":{"s":6,"g":"木"},"会":{"s":6,"g":"木"},"伝":{"s":6,"g":"火"},"伯":{"s":7,"g":"水"},"伴":{"s":7,"g":"水"},"伸":{"s":7,"g":"金"},"伺":{"s":7,"g":"金"},"似":{"s":7,"g":"金"},"伽":{"s":7,"g":"木"},"佃":{"s":7,"g":"火"},"但":{"s":7,"g":"火"},"位":{"s":7,"g":"土"},"低":{"s":7,"g":"火"},"住":{"s":7,"g":"金"},"佐":{"s":7,"g":"金"},"佑":{"s":7,"g":"土"},"体":{"s":7,"g":"火"},"何":{"s":7,"g":"木"},"余":{"s":7,"g":"土"},"作":{"s":7,"g":"金"},"佳":{"s":8,"g":"木"},"併":{"s":8,"g":"水"},"使":{"s":8,"g":"金"},"侃":{"s":8,"g":"木"},"例":{"s":8,"g":"火"},"侍":{"s":8,"g":"金"},"侑":{"s":8,"g":"土"},"供":{"s":8,"g":"木"},"依":{"s":8,"g":"土"},"価":{"s":8,"g":"木"},"侮":{"s":8,"g":"水"},"侵":{"s":9,"g":"金"},"侶":{"s":9,"g":"火"},"便":{"s":9,"g":"水"},"係":{"s":9,"g":"木"},"促":{"s":9,"g":"金"},"俄":{"s":9,"g":"木"},"俊":{"s":9,"g":"金"},"俐":{"s":9,"g":"火"},"俗":{"s":9,"g":"金"},"保":{"s":9,"g":"水"},"俠":{"s":9,"g":"木"},"信":{"s":9,"g":"金"},"俣":{"s":9,"g":"水"},"修":{"s":10,"g":"金"},"俳":{"s":10,"g":"水"},"俵":{"s":10,"g":"水"},"俸":{"s":10,"g":"水"},"俺":{"s":10,"g":"土"},"倉":{"s":10,"g":"金"},"個":{"s":10,"g":"木"},"倍":{"s":10,"g":"水"},"倒":{"s":10,"g":"火"},"倖":{"s":10,"g":"木"},"候":{"s":9,"g":"木"},"借":{"s":10,"g":"金"},"値":{"s":10,"g":"火"},"倦":{"s":10,"g":"木"},"倫":{"s":10,"g":"火"},"倭":{"s":10,"g":"土"},"倶":{"s":10,"g":"木"},"倹":{"s":10,"g":"木"},"偉":{"s":12,"g":"土"},"偏":{"s":11,"g":"水"},"停":{"s":11,"g":"火"},"健":{"s":11,"g":"木"},"偲":{"s":11,"g":"金"},"側":{"s":11,"g":"金"},"偵":{"s":11,"g":"火"},"偶":{"s":11,"g":"木"},"偽":{"s":11,"g":"木"},"傍":{"s":12,"g":"水"},"傑":{"s":13,"g":"木"},"傘":{"s":12,"g":"金"},"備":{"s":12,"g":"水"},"催":{"s":13,"g":"金"},"傭":{"s":13,"g":"土"},"債":{"s":13,"g":"金"},"傷":{"s":13,"g":"金"},"傾":{"s":13,"g":"木"},"僅":{"s":13,"g":"木"},"働":{"s":13,"g":"火"},"像":{"s":14,"g":"金"},"僕":{"s":14,"g":"水"},"僚":{"s":14,"g":"火"},"僧":{"s":13,"g":"金"},"儀":{"s":15,"g":"木"},"億":{"s":15,"g":"土"},"儒":{"s":16,"g":"金"},"償":{"s":17,"g":"金"},"優":{"s":17,"g":"土"},"儲":{"s":18,"g":"火"},"允":{"s":4,"g":"土"},"元":{"s":4,"g":"木"},"兄":{"s":5,"g":"木"},"充":{"s":6,"g":"木"},"兆":{"s":6,"g":"火"},"先":{"s":6,"g":"木"},"光":{"s":6,"g":"木"},"克":{"s":7,"g":"木"},"免":{"s":8,"g":"水"},"兎":{"s":7,"g":"火"},"児":{"s":7,"g":"金"},"党":{"s":10,"g":"火"},"兜":{"s":11,"g":"火"},"入":{"s":2,"g":"火"},"全":{"s":6,"g":"木"},"八":{"s":2,"g":"水"},"公":{"s":4,"g":"木"},"六":{"s":4,"g":"火"},"共":{"s":6,"g":"木"},"兵":{"s":7,"g":"水"},"其":{"s":8,"g":"木"},"具":{"s":8,"g":"木"},"典":{"s":8,"g":"火"},"兼":{"s":10,"g":"木"},"内":{"s":4,"g":"火"},"円":{"s":4,"g":"土"},"冊":{"s":5,"g":"金"},"再":{"s":6,"g":"木"},"冒":{"s":9,"g":"水"},"写":{"s":5,"g":"金"},"冠":{"s":9,"g":"木"},"冥":{"s":10,"g":"水"},"冬":{"s":5,"g":"火"},"冴":{"s":6,"g":"木"},"冶":{"s":7,"g":"土"},"冷":{"s":7,"g":"火"},"凄":{"s":10,"g":"金"},"准":{"s":10,"g":"金"},"凌":{"s":10,"g":"火"},"凍":{"s":10,"g":"火"},"凛":{"s":15,"g":"火"},"凜":{"s":15,"g":"火"},"凝":{"s":16,"g":"木"},"凡":{"s":3,"g":"水"},"処":{"s":5,"g":"金"},"凧":{"s":5,"g":"火"},"凪":{"s":6,"g":"火"},"凰":{"s":11,"g":"土"},"凱":{"s":12,"g":"木"},"凶":{"s":4,"g":"木"},"凸":{"s":5,"g":"火"},"凹":{"s":5,"g":"土"},"出":{"s":5,"g":"金"},"函":{"s":8,"g":"木"},"刀":{"s":2,"g":"火"},"刃":{"s":3,"g":"金"},"分":{"s":4,"g":"水"},"切":{"s":4,"g":"金"},"刈":{"s":4,"g":"木"},"刊":{"s":5,"g":"木"},"刑":{"s":6,"g":"木"},"列":{"s":6,"g":"火"},"初":{"s":7,"g":"金"},"判":{"s":7,"g":"水"},"別":{"s":7,"g":"水"},"利":{"s":7,"g":"火"},"到":{"s":8,"g":"火"},"制":{"s":8,"g":"金"},"刷":{"s":8,"g":"金"},"券":{"s":8,"g":"木"},"刹":{"s":8,"g":"金"},"刺":{"s":8,"g":"金"},"刻":{"s":8,"g":"木"},"則":{"s":9,"g":"金"},"削":{"s":9,"g":"金"},"前":{"s":9,"g":"金"},"剖":{"s":10,"g":"水"},"剛":{"s":10,"g":"木"},"剣":{"s":10,"g":"木"},"剤":{"s":10,"g":"金"},"副":{"s":11,"g":"水"},"剰":{"s":11,"g":"金"},"割":{"s":12,"g":"木"},"創":{"s":12,"g":"金"},"劇":{"s":15,"g":"木"},"劉":{"s":15,"g":"火"},"力":{"s":2,"g":"火"},"功":{"s":5,"g":"木"},"加":{"s":5,"g":"木"},"劣":{"s":6,"g":"火"},"助":{"s":6,"g":"火"},"努":{"s":7,"g":"火"},"劫":{"s":7,"g":"木"},"励":{"s":7,"g":"火"},"労":{"s":7,"g":"火"},"効":{"s":8,"g":"木"},"劾":{"s":8,"g":"木"},"勁":{"s":9,"g":"木"},"勃":{"s":9,"g":"水"},"勅":{"s":9,"g":"火"},"勇":{"s":9,"g":"土"},"勉":{"s":10,"g":"水"},"動":{"s":11,"g":"火"},"勘":{"s":11,"g":"木"},"務":{"s":11,"g":"水"},"勝":{"s":12,"g":"金"},"募":{"s":12,"g":"水"},"勢":{"s":13,"g":"金"},"勤":{"s":12,"g":"木"},"勧":{"s":13,"g":"木"},"勲":{"s":15,"g":"木"},"勺":{"s":3,"g":"金"},"勾":{"s":4,"g":"木"},"勿":{"s":4,"g":"水"},"匁":{"s":4,"g":"水"},"匂":{"s":4,"g":"火"},"包":{"s":5,"g":"水"},"化":{"s":4,"g":"木"},"北":{"s":5,"g":"水"},"匠":{"s":6,"g":"木"},"匡":{"s":6,"g":"木"},"匹":{"s":4,"g":"水"},"区":{"s":4,"g":"木"},"医":{"s":7,"g":"土"},"匿":{"s":10,"g":"火"},"十":{"s":2,"g":"金"},"千":{"s":3,"g":"金"},"升":{"s":4,"g":"金"},"午":{"s":4,"g":"木"},"半":{"s":5,"g":"水"},"卑":{"s":9,"g":"水"},"卒":{"s":8,"g":"金"},"卓":{"s":8,"g":"火"},"協":{"s":8,"g":"木"},"南":{"s":9,"g":"火"},"単":{"s":9,"g":"火"},"博":{"s":12,"g":"水"},"占":{"s":5,"g":"金"},"卯":{"s":5,"g":"水"},"印":{"s":6,"g":"土"},"危":{"s":6,"g":"木"},"即":{"s":7,"g":"金"},"却":{"s":7,"g":"木"},"卵":{"s":7,"g":"火"},"卸":{"s":9,"g":"金"},"卿":{"s":12,"g":"木"},"厄":{"s":4,"g":"木"},"厘":{"s":9,"g":"火"},"厚":{"s":9,"g":"木"},"原":{"s":10,"g":"木"},"厨":{"s":12,"g":"火"},"厩":{"s":14,"g":"木"},"厳":{"s":17,"g":"木"},"去":{"s":5,"g":"木"},"参":{"s":8,"g":"金"},"又":{"s":2,"g":"土"},"叉":{"s":3,"g":"金"},"及":{"s":3,"g":"木"},"友":{"s":4,"g":"土"},"双":{"s":4,"g":"金"},"反":{"s":4,"g":"水"},"収":{"s":4,"g":"金"},"叔":{"s":8,"g":"金"},"取":{"s":8,"g":"金"},"受":{"s":8,"g":"金"},"叙":{"s":9,"g":"金"},"叡":{"s":16,"g":"土"},"叢":{"s":18,"g":"金"},"口":{"s":3,"g":"木"},"古":{"s":5,"g":"木"},"句":{"s":5,"g":"木"},"只":{"s":5,"g":"金"},"叫":{"s":6,"g":"木"},"召":{"s":5,"g":"金"},"可":{"s":5,"g":"木"},"台":{"s":5,"g":"火"},"史":{"s":5,"g":"金"},"右":{"s":5,"g":"土"},"叶":{"s":5,"g":"木"},"号":{"s":5,"g":"木"},"司":{"s":5,"g":"金"},"各":{"s":6,"g":"木"},"合":{"s":6,"g":"木"},"吉":{"s":6,"g":"木"},"同":{"s":6,"g":"火"},"名":{"s":6,"g":"水"},"后":{"s":6,"g":"木"},"吏":{"s":6,"g":"火"},"吐":{"s":6,"g":"火"},"向":{"s":6,"g":"木"},"君":{"s":7,"g":"木"},"吟":{"s":7,"g":"木"},"否":{"s":7,"g":"水"},"含":{"s":7,"g":"木"},"吸":{"s":7,"g":"木"},"吹":{"s":7,"g":"金"},"吻":{"s":7,"g":"水"},"吾":{"s":7,"g":"木"},"呂":{"s":7,"g":"火"},"呈":{"s":7,"g":"火"},"呉":{"s":7,"g":"木"},"告":{"s":7,"g":"木"},"呑":{"s":7,"g":"火"},"周":{"s":8,"g":"金"},"味":{"s":8,"g":"水"},"呼":{"s":8,"g":"木"},"命":{"s":8,"g":"水"},"和":{"s":8,"g":"土"},"咲":{"s":9,"g":"金"},"哀":{"s":9,"g":"土"},"品":{"s":9,"g":"水"},"哉":{"s":9,"g":"金"},"員":{"s":10,"g":"土"},"哨":{"s":10,"g":"金"},"哩":{"s":10,"g":"火"},"哲":{"s":10,"g":"火"},"唄":{"s":10,"g":"水"},"唆":{"s":10,"g":"金"},"唇":{"s":10,"g":"金"},"唐":{"s":10,"g":"火"},"唯":{"s":11,"g":"土"},"唱":{"s":11,"g":"金"},"啄":{"s":10,"g":"火"},"商":{"s":11,"g":"金"},"問":{"s":11,"g":"水"},"啓":{"s":11,"g":"木"},"善":{"s":12,"g":"金"},"喋":{"s":12,"g":"火"},"喚":{"s":12,"g":"木"},"喜":{"s":12,"g":"木"},"喝":{"s":11,"g":"木"},"喧":{"s":12,"g":"木"},"喪":{"s":12,"g":"金"},"喫":{"s":12,"g":"木"},"喬":{"s":12,"g":"木"},"喰":{"s":12,"g":"金"},"営":{"s":12,"g":"土"},"嗣":{"s":13,"g":"金"},"嘆":{"s":13,"g":"火"},"嘉":{"s":14,"g":"木"},"嘗":{"s":14,"g":"金"},"嘩":{"s":13,"g":"木"},"嘱":{"s":15,"g":"金"},"噂":{"s":15,"g":"金"},"噌":{"s":15,"g":"金"},"器":{"s":15,"g":"木"},"噴":{"s":15,"g":"水"},"嚇":{"s":17,"g":"木"},"囚":{"s":5,"g":"金"},"四":{"s":5,"g":"金"},"回":{"s":6,"g":"木"},"因":{"s":6,"g":"土"},"団":{"s":6,"g":"火"},"困":{"s":7,"g":"木"},"囲":{"s":7,"g":"土"},"図":{"s":7,"g":"火"},"固":{"s":8,"g":"木"},"国":{"s":8,"g":"木"},"圃":{"s":10,"g":"水"},"圏":{"s":12,"g":"木"},"園":{"s":13,"g":"土"},"土":{"s":3,"g":"火"},"圧":{"s":5,"g":"土"},"在":{"s":6,"g":"木"},"圭":{"s":6,"g":"木"},"地":{"s":6,"g":"火"},"圷":{"s":6,"g":"土"},"坂":{"s":7,"g":"水"},"均":{"s":7,"g":"木"},"坊":{"s":7,"g":"水"},"坐":{"s":7,"g":"金"},"坑":{"s":7,"g":"木"},"坦":{"s":8,"g":"火"},"坪":{"s":8,"g":"水"},"垂":{"s":8,"g":"金"},"型":{"s":9,"g":"木"},"垣":{"s":9,"g":"木"},"埋":{"s":10,"g":"水"},"城":{"s":9,"g":"金"},"域":{"s":11,"g":"土"},"埴":{"s":11,"g":"金"},"執":{"s":11,"g":"金"},"培":{"s":11,"g":"水"},"基":{"s":11,"g":"木"},"埼":{"s":11,"g":"木"},"堀":{"s":11,"g":"木"},"堂":{"s":11,"g":"火"},"堅":{"s":12,"g":"木"},"堆":{"s":11,"g":"火"},"堕":{"s":12,"g":"火"},"堤":{"s":12,"g":"火"},"堯":{"s":12,"g":"木"},"堰":{"s":12,"g":"土"},"報":{"s":12,"g":"水"},"場":{"s":12,"g":"金"},"堵":{"s":12,"g":"火"},"堺":{"s":12,"g":"木"},"塀":{"s":12,"g":"水"},"塁":{"s":12,"g":"火"},"塊":{"s":13,"g":"木"},"塑":{"s":13,"g":"金"},"塔":{"s":12,"g":"火"},"塗":{"s":13,"g":"火"},"塙":{"s":13,"g":"木"},"塚":{"s":12,"g":"火"},"塞":{"s":13,"g":"金"},"塡":{"s":13,"g":"火"},"塩":{"s":13,"g":"土"},"塾":{"s":14,"g":"金"},"境":{"s":14,"g":"木"},"墓":{"s":13,"g":"水"},"増":{"s":14,"g":"金"},"墜":{"s":15,"g":"火"},"墨":{"s":14,"g":"水"},"墳":{"s":15,"g":"水"},"墾":{"s":16,"g":"木"},"壁":{"s":16,"g":"水"},"壇":{"s":16,"g":"火"},"壊":{"s":16,"g":"木"},"壌":{"s":16,"g":"金"},"壕":{"s":17,"g":"木"},"士":{"s":3,"g":"金"},"壬":{"s":4,"g":"金"},"壮":{"s":6,"g":"木"},"声":{"s":7,"g":"金"},"壱":{"s":7,"g":"土"},"売":{"s":7,"g":"水"},"変":{"s":9,"g":"水"},"夏":{"s":10,"g":"木"},"夕":{"s":3,"g":"金"},"外":{"s":5,"g":"木"},"多":{"s":6,"g":"火"},"夜":{"s":8,"g":"土"},"夢":{"s":13,"g":"水"},"大":{"s":3,"g":"火"},"天":{"s":4,"g":"火"},"太":{"s":4,"g":"火"},"夫":{"s":4,"g":"水"},"央":{"s":5,"g":"土"},"失":{"s":5,"g":"金"},"夷":{"s":6,"g":"土"},"奄":{"s":8,"g":"土"},"奇":{"s":8,"g":"木"},"奈":{"s":8,"g":"火"},"奉":{"s":8,"g":"水"},"奎":{"s":9,"g":"木"},"奏":{"s":9,"g":"金"},"契":{"s":9,"g":"木"},"奔":{"s":8,"g":"水"},"套":{"s":10,"g":"火"},"奥":{"s":12,"g":"土"},"奨":{"s":13,"g":"金"},"奪":{"s":14,"g":"火"},"奮":{"s":16,"g":"水"},"女":{"s":3,"g":"金"},"奴":{"s":5,"g":"火"},"好":{"s":6,"g":"木"},"如":{"s":6,"g":"木"},"妃":{"s":6,"g":"水"},"妄":{"s":6,"g":"水"},"妊":{"s":7,"g":"火"},"妖":{"s":7,"g":"土"},"妙":{"s":7,"g":"水"},"妥":{"s":7,"g":"火"},"妨":{"s":7,"g":"水"},"妹":{"s":8,"g":"水"},"妻":{"s":8,"g":"金"},"姉":{"s":8,"g":"金"},"始":{"s":8,"g":"金"},"姓":{"s":8,"g":"金"},"委":{"s":8,"g":"土"},"姥":{"s":9,"g":"水"},"姪":{"s":9,"g":"火"},"姫":{"s":10,"g":"木"},"姻":{"s":9,"g":"土"},"姿":{"s":9,"g":"金"},"威":{"s":9,"g":"土"},"娃":{"s":9,"g":"土"},"娘":{"s":10,"g":"火"},"娠":{"s":10,"g":"金"},"娩":{"s":10,"g":"水"},"娯":{"s":10,"g":"木"},"婆":{"s":11,"g":"水"},"婚":{"s":11,"g":"木"},"婦":{"s":11,"g":"水"},"婿":{"s":12,"g":"金"},"媒":{"s":12,"g":"水"},"媛":{"s":12,"g":"土"},"嫁":{"s":13,"g":"木"},"嫌":{"s":13,"g":"木"},"嫡":{"s":14,"g":"火"},"嬉":{"s":15,"g":"木"},"嬢":{"s":16,"g":"金"},"子":{"s":3,"g":"金"},"孔":{"s":4,"g":"木"},"字":{"s":6,"g":"木"},"存":{"s":6,"g":"木"},"孜":{"s":7,"g":"金"},"孝":{"s":7,"g":"木"},"孟":{"s":8,"g":"水"},"季":{"s":8,"g":"木"},"孤":{"s":9,"g":"木"},"学":{"s":8,"g":"木"},"宅":{"s":6,"g":"火"},"宇":{"s":6,"g":"土"},"守":{"s":6,"g":"木"},"安":{"s":6,"g":"土"},"宋":{"s":7,"g":"金"},"完":{"s":7,"g":"木"},"宏":{"s":7,"g":"木"},"宕":{"s":8,"g":"火"},"宗":{"s":8,"g":"金"},"官":{"s":8,"g":"木"},"宙":{"s":8,"g":"火"},"定":{"s":8,"g":"火"},"宜":{"s":8,"g":"木"},"宝":{"s":8,"g":"水"},"実":{"s":8,"g":"金"},"客":{"s":9,"g":"木"},"宣":{"s":9,"g":"金"},"室":{"s":9,"g":"金"},"宥":{"s":9,"g":"土"},"宮":{"s":10,"g":"木"},"宰":{"s":10,"g":"金"},"害":{"s":10,"g":"木"},"宴":{"s":10,"g":"土"},"宵":{"s":10,"g":"金"},"家":{"s":10,"g":"木"},"容":{"s":10,"g":"土"},"宿":{"s":11,"g":"金"},"寂":{"s":11,"g":"金"},"寄":{"s":11,"g":"木"},"寅":{"s":11,"g":"土"},"密":{"s":11,"g":"水"},"富":{"s":12,"g":"水"},"寒":{"s":12,"g":"木"},"寓":{"s":12,"g":"木"},"寛":{"s":13,"g":"木"},"寝":{"s":13,"g":"金"},"察":{"s":14,"g":"金"},"寡":{"s":14,"g":"木"},"寧":{"s":14,"g":"火"},"審":{"s":15,"g":"金"},"寮":{"s":15,"g":"火"},"寵":{"s":19,"g":"火"},"寸":{"s":3,"g":"金"},"寺":{"s":6,"g":"木"},"対":{"s":7,"g":"火"},"寿":{"s":7,"g":"金"},"封":{"s":9,"g":"水"},"専":{"s":9,"g":"金"},"射":{"s":10,"g":"金"},"将":{"s":10,"g":"金"},"尉":{"s":11,"g":"土"},"尊":{"s":12,"g":"金"},"尋":{"s":12,"g":"金"},"導":{"s":15,"g":"火"},"小":{"s":3,"g":"金"},"少":{"s":4,"g":"金"},"尖":{"s":6,"g":"木"},"尚":{"s":8,"g":"金"},"尤":{"s":4,"g":"土"},"尭":{"s":8,"g":"木"},"就":{"s":12,"g":"金"},"尺":{"s":4,"g":"金"},"尼":{"s":5,"g":"火"},"尽":{"s":6,"g":"木"},"尾":{"s":7,"g":"水"},"尿":{"s":7,"g":"火"},"局":{"s":7,"g":"木"},"居":{"s":8,"g":"木"},"屈":{"s":8,"g":"木"},"届":{"s":8,"g":"木"},"屋":{"s":9,"g":"土"},"屑":{"s":10,"g":"金"},"展":{"s":10,"g":"火"},"属":{"s":12,"g":"金"},"層":{"s":14,"g":"金"},"履":{"s":15,"g":"火"},"屯":{"s":4,"g":"火"},"山":{"s":3,"g":"金"},"岐":{"s":7,"g":"木"},"岡":{"s":8,"g":"木"},"岩":{"s":8,"g":"木"},"岬":{"s":8,"g":"木"},"岳":{"s":8,"g":"木"},"岸":{"s":8,"g":"木"},"峠":{"s":9,"g":"火"},"峡":{"s":9,"g":"木"},"峨":{"s":10,"g":"木"},"峰":{"s":10,"g":"水"},"島":{"s":10,"g":"火"},"峻":{"s":10,"g":"金"},"崎":{"s":11,"g":"木"},"崖":{"s":11,"g":"木"},"崩":{"s":11,"g":"水"},"嵐":{"s":12,"g":"火"},"嵩":{"s":13,"g":"金"},"嵯":{"s":13,"g":"金"},"嶺":{"s":17,"g":"火"},"巌":{"s":20,"g":"木"},"巖":{"s":23,"g":"木"},"川":{"s":3,"g":"金"},"州":{"s":6,"g":"木"},"巡":{"s":6,"g":"木"},"巣":{"s":11,"g":"金"},"工":{"s":3,"g":"木"},"左":{"s":5,"g":"金"},"巧":{"s":5,"g":"木"},"巨":{"s":5,"g":"木"},"差":{"s":10,"g":"金"},"己":{"s":3,"g":"木"},"已":{"s":3,"g":"土"},"巳":{"s":3,"g":"金"},"巴":{"s":4,"g":"水"},"巷":{"s":9,"g":"木"},"巻":{"s":9,"g":"木"},"巽":{"s":12,"g":"金"},"巾":{"s":3,"g":"木"},"市":{"s":5,"g":"金"},"布":{"s":5,"g":"水"},"帆":{"s":6,"g":"水"},"希":{"s":7,"g":"木"},"帖":{"s":8,"g":"火"},"帝":{"s":9,"g":"火"},"師":{"s":9,"g":"金"},"席":{"s":10,"g":"金"},"帯":{"s":10,"g":"火"},"帰":{"s":10,"g":"木"},"帳":{"s":11,"g":"火"},"常":{"s":11,"g":"金"},"帽":{"s":12,"g":"水"},"幅":{"s":12,"g":"水"},"幌":{"s":13,"g":"木"},"幕":{"s":13,"g":"水"},"幡":{"s":15,"g":"水"},"幣":{"s":15,"g":"水"},"干":{"s":3,"g":"木"},"平":{"s":5,"g":"水"},"年":{"s":6,"g":"火"},"幸":{"s":8,"g":"木"},"幹":{"s":13,"g":"木"},"幻":{"s":4,"g":"木"},"幼":{"s":5,"g":"土"},"幽":{"s":9,"g":"土"},"幾":{"s":12,"g":"木"},"庁":{"s":5,"g":"火"},"広":{"s":5,"g":"木"},"庄":{"s":6,"g":"木"},"庇":{"s":7,"g":"水"},"床":{"s":7,"g":"金"},"序":{"s":7,"g":"金"},"底":{"s":8,"g":"火"},"店":{"s":8,"g":"火"},"庚":{"s":8,"g":"木"},"府":{"s":8,"g":"水"},"度":{"s":9,"g":"火"},"座":{"s":10,"g":"金"},"庫":{"s":10,"g":"木"},"庭":{"s":10,"g":"火"},"庵":{"s":11,"g":"土"},"庶":{"s":11,"g":"金"},"康":{"s":11,"g":"木"},"庸":{"s":11,"g":"土"},"廃":{"s":12,"g":"水"},"廉":{"s":13,"g":"火"},"廊":{"s":12,"g":"火"},"廟":{"s":15,"g":"水"},"延":{"s":8,"g":"土"},"廷":{"s":7,"g":"火"},"建":{"s":9,"g":"木"},"廻":{"s":9,"g":"木"},"廿":{"s":4,"g":"金"},"弁":{"s":5,"g":"水"},"弊":{"s":15,"g":"水"},"式":{"s":6,"g":"木"},"弐":{"s":6,"g":"木"},"弓":{"s":3,"g":"木"},"弔":{"s":4,"g":"火"},"引":{"s":4,"g":"土"},"弘":{"s":5,"g":"木"},"弛":{"s":6,"g":"木"},"弟":{"s":7,"g":"火"},"弥":{"s":8,"g":"水"},"弦":{"s":8,"g":"木"},"弧":{"s":9,"g":"木"},"弱":{"s":10,"g":"金"},"張":{"s":11,"g":"火"},"強":{"s":11,"g":"木"},"弾":{"s":12,"g":"火"},"彌":{"s":17,"g":"水"},"当":{"s":6,"g":"火"},"彗":{"s":11,"g":"金"},"形":{"s":7,"g":"木"},"彦":{"s":9,"g":"木"},"彩":{"s":11,"g":"金"},"彪":{"s":11,"g":"水"},"彫":{"s":11,"g":"火"},"彬":{"s":11,"g":"水"},"彰":{"s":14,"g":"金"},"影":{"s":15,"g":"土"},"役":{"s":7,"g":"土"},"彼":{"s":8,"g":"水"},"往":{"s":8,"g":"土"},"征":{"s":8,"g":"金"},"径":{"s":8,"g":"木"},"待":{"s":9,"g":"火"},"律":{"s":9,"g":"火"},"後":{"s":9,"g":"木"},"徐":{"s":10,"g":"金"},"徒":{"s":10,"g":"火"},"従":{"s":10,"g":"金"},"得":{"s":11,"g":"火"},"徠":{"s":11,"g":"火"},"御":{"s":11,"g":"木"},"復":{"s":12,"g":"水"},"循":{"s":12,"g":"金"},"微":{"s":13,"g":"水"},"徳":{"s":14,"g":"火"},"徴":{"s":14,"g":"火"},"徹":{"s":15,"g":"火"},"徽":{"s":17,"g":"木"},"心":{"s":4,"g":"金"},"必":{"s":5,"g":"水"},"忌":{"s":7,"g":"木"},"忍":{"s":7,"g":"火"},"志":{"s":7,"g":"金"},"忘":{"s":7,"g":"水"},"忙":{"s":6,"g":"水"},"応":{"s":7,"g":"土"},"忠":{"s":8,"g":"火"},"快":{"s":7,"g":"木"},"念":{"s":8,"g":"火"},"忽":{"s":8,"g":"木"},"怒":{"s":9,"g":"火"},"怖":{"s":8,"g":"水"},"怜":{"s":7,"g":"火"},"思":{"s":9,"g":"金"},"怠":{"s":9,"g":"火"},"急":{"s":9,"g":"木"},"性":{"s":8,"g":"金"},"怪":{"s":8,"g":"木"},"恋":{"s":10,"g":"火"},"恐":{"s":10,"g":"木"},"恒":{"s":9,"g":"木"},"恕":{"s":10,"g":"金"},"恢":{"s":9,"g":"木"},"恥":{"s":10,"g":"火"},"恨":{"s":9,"g":"木"},"恩":{"s":10,"g":"土"},"恭":{"s":10,"g":"木"},"息":{"s":10,"g":"金"},"恰":{"s":9,"g":"木"},"恵":{"s":10,"g":"木"},"悉":{"s":11,"g":"金"},"悌":{"s":10,"g":"火"},"悟":{"s":10,"g":"木"},"悠":{"s":11,"g":"土"},"患":{"s":11,"g":"木"},"悦":{"s":10,"g":"土"},"悩":{"s":10,"g":"火"},"悪":{"s":11,"g":"土"},"悲":{"s":12,"g":"水"},"悼":{"s":11,"g":"火"},"情":{"s":11,"g":"金"},"惇":{"s":11,"g":"金"},"惑":{"s":12,"g":"土"},"惚":{"s":11,"g":"木"},"惜":{"s":11,"g":"金"},"惟":{"s":11,"g":"土"},"惣":{"s":12,"g":"金"},"惨":{"s":11,"g":"金"},"惰":{"s":12,"g":"火"},"想":{"s":13,"g":"金"},"惺":{"s":12,"g":"金"},"愁":{"s":13,"g":"金"},"愉":{"s":12,"g":"土"},"意":{"s":13,"g":"土"},"愚":{"s":13,"g":"木"},"愛":{"s":13,"g":"土"},"感":{"s":13,"g":"木"},"慈":{"s":13,"g":"金"},"態":{"s":14,"g":"火"},"慌":{"s":12,"g":"木"},"慎":{"s":13,"g":"金"},"慕":{"s":14,"g":"水"},"慢":{"s":14,"g":"水"},"慣":{"s":14,"g":"木"},"慧":{"s":15,"g":"土"},"慨":{"s":13,"g":"木"},"慮":{"s":15,"g":"火"},"慰":{"s":15,"g":"土"},"慶":{"s":15,"g":"木"},"憂":{"s":15,"g":"土"},"憎":{"s":14,"g":"金"},"憐":{"s":15,"g":"火"},"憤":{"s":15,"g":"水"},"憧":{"s":15,"g":"火"},"憩":{"s":16,"g":"木"},"憲":{"s":16,"g":"木"},"憶":{"s":16,"g":"土"},"憾":{"s":16,"g":"木"},"懇":{"s":17,"g":"木"},"懐":{"s":16,"g":"木"},"懲":{"s":18,"g":"火"},"懸":{"s":20,"g":"木"},"戊":{"s":5,"g":"土"},"成":{"s":6,"g":"木"},"我":{"s":7,"g":"木"},"戒":{"s":7,"g":"木"},"或":{"s":8,"g":"土"},"戟":{"s":12,"g":"木"},"戦":{"s":13,"g":"金"},"戯":{"s":15,"g":"木"},"戴":{"s":17,"g":"火"},"戸":{"s":4,"g":"木"},"戻":{"s":7,"g":"火"},"房":{"s":8,"g":"水"},"所":{"s":8,"g":"金"},"扇":{"s":10,"g":"金"},"扉":{"s":12,"g":"水"},"手":{"s":4,"g":"金"},"才":{"s":3,"g":"金"},"打":{"s":5,"g":"火"},"払":{"s":5,"g":"水"},"托":{"s":6,"g":"火"},"扱":{"s":7,"g":"木"},"扶":{"s":7,"g":"水"},"批":{"s":7,"g":"水"},"承":{"s":8,"g":"金"},"技":{"s":7,"g":"木"},"抄":{"s":7,"g":"金"},"把":{"s":7,"g":"水"},"投":{"s":7,"g":"火"},"抗":{"s":7,"g":"木"},"折":{"s":7,"g":"金"},"抜":{"s":7,"g":"水"},"択":{"s":7,"g":"火"},"披":{"s":8,"g":"水"},"抱":{"s":8,"g":"水"},"抵":{"s":8,"g":"火"},"抹":{"s":8,"g":"水"},"押":{"s":8,"g":"土"},"抽":{"s":8,"g":"火"},"担":{"s":8,"g":"火"},"拍":{"s":8,"g":"水"},"拐":{"s":8,"g":"木"},"拒":{"s":8,"g":"木"},"拓":{"s":8,"g":"火"},"拘":{"s":8,"g":"木"},"拙":{"s":8,"g":"金"},"招":{"s":8,"g":"金"},"拝":{"s":8,"g":"水"},"拠":{"s":8,"g":"木"},"拡":{"s":8,"g":"木"},"括":{"s":9,"g":"木"},"拭":{"s":9,"g":"金"},"拳":{"s":10,"g":"木"},"拶":{"s":9,"g":"金"},"拷":{"s":9,"g":"木"},"持":{"s":9,"g":"金"},"指":{"s":9,"g":"金"},"按":{"s":9,"g":"土"},"挑":{"s":9,"g":"火"},"挟":{"s":9,"g":"木"},"挨":{"s":10,"g":"土"},"振":{"s":10,"g":"金"},"挺":{"s":10,"g":"火"},"挽":{"s":11,"g":"水"},"挿":{"s":10,"g":"金"},"捉":{"s":10,"g":"金"},"捕":{"s":10,"g":"水"},"捜":{"s":10,"g":"金"},"捧":{"s":11,"g":"水"},"捨":{"s":9,"g":"金"},"据":{"s":11,"g":"金"},"捲":{"s":11,"g":"木"},"捷":{"s":11,"g":"金"},"捺":{"s":11,"g":"火"},"捻":{"s":11,"g":"火"},"掃":{"s":11,"g":"金"},"授":{"s":11,"g":"金"},"掌":{"s":12,"g":"金"},"排":{"s":11,"g":"水"},"掘":{"s":11,"g":"木"},"掛":{"s":11,"g":"木"},"掠":{"s":11,"g":"火"},"採":{"s":11,"g":"金"},"探":{"s":11,"g":"火"},"接":{"s":11,"g":"金"},"控":{"s":11,"g":"木"},"推":{"s":11,"g":"金"},"措":{"s":11,"g":"金"},"掬":{"s":11,"g":"木"},"掲":{"s":11,"g":"木"},"揃":{"s":12,"g":"金"},"描":{"s":11,"g":"水"},"提":{"s":12,"g":"火"},"揚":{"s":12,"g":"土"},"換":{"s":12,"g":"木"},"握":{"s":12,"g":"土"},"揮":{"s":12,"g":"木"},"援":{"s":12,"g":"土"},"揺":{"s":12,"g":"土"},"損":{"s":13,"g":"金"},"搬":{"s":13,"g":"水"},"搭":{"s":12,"g":"火"},"携":{"s":13,"g":"木"},"搾":{"s":13,"g":"金"},"摂":{"s":13,"g":"金"},"摑":{"s":14,"g":"木"},"摘":{"s":14,"g":"火"},"摩":{"s":15,"g":"水"},"摺":{"s":14,"g":"金"},"撃":{"s":15,"g":"木"},"撞":{"s":15,"g":"火"},"撤":{"s":15,"g":"火"},"撫":{"s":15,"g":"水"},"播":{"s":15,"g":"水"},"撮":{"s":15,"g":"金"},"撰":{"s":15,"g":"金"},"撲":{"s":15,"g":"水"},"擁":{"s":16,"g":"土"},"操":{"s":16,"g":"金"},"擢":{"s":17,"g":"火"},"擦":{"s":17,"g":"金"},"擬":{"s":17,"g":"木"},"支":{"s":4,"g":"金"},"改":{"s":7,"g":"木"},"攻":{"s":7,"g":"木"},"放":{"s":8,"g":"水"},"政":{"s":9,"g":"金"},"故":{"s":9,"g":"木"},"敏":{"s":10,"g":"水"},"救":{"s":11,"g":"木"},"敗":{"s":11,"g":"水"},"教":{"s":11,"g":"木"},"敢":{"s":12,"g":"木"},"散":{"s":12,"g":"金"},"敦":{"s":12,"g":"火"},"敬":{"s":12,"g":"木"},"数":{"s":13,"g":"金"},"整":{"s":16,"g":"金"},"敵":{"s":15,"g":"火"},"敷":{"s":15,"g":"水"},"文":{"s":4,"g":"水"},"斉":{"s":8,"g":"金"},"斎":{"s":11,"g":"金"},"斐":{"s":12,"g":"水"},"斑":{"s":12,"g":"水"},"斗":{"s":4,"g":"火"},"料":{"s":10,"g":"火"},"斜":{"s":11,"g":"金"},"斡":{"s":14,"g":"土"},"斤":{"s":4,"g":"木"},"斥":{"s":5,"g":"金"},"斧":{"s":8,"g":"水"},"断":{"s":11,"g":"火"},"斯":{"s":12,"g":"金"},"新":{"s":13,"g":"金"},"方":{"s":4,"g":"水"},"於":{"s":8,"g":"土"},"施":{"s":9,"g":"金"},"旅":{"s":10,"g":"火"},"旋":{"s":11,"g":"金"},"族":{"s":11,"g":"金"},"旗":{"s":14,"g":"木"},"既":{"s":10,"g":"木"},"日":{"s":4,"g":"火"},"旦":{"s":5,"g":"火"},"旧":{"s":5,"g":"木"},"旨":{"s":6,"g":"木"},"早":{"s":6,"g":"木"},"旬":{"s":6,"g":"木"},"旭":{"s":6,"g":"木"},"旺":{"s":8,"g":"土"},"昆":{"s":8,"g":"木"},"昇":{"s":8,"g":"金"},"昊":{"s":8,"g":"木"},"昌":{"s":8,"g":"金"},"明":{"s":8,"g":"水"},"昏":{"s":8,"g":"木"},"易":{"s":8,"g":"土"},"昔":{"s":8,"g":"金"},"星":{"s":9,"g":"金"},"映":{"s":9,"g":"土"},"春":{"s":9,"g":"金"},"昧":{"s":9,"g":"水"},"昨":{"s":9,"g":"金"},"昭":{"s":9,"g":"金"},"是":{"s":9,"g":"金"},"昴":{"s":8,"g":"木"},"昼":{"s":9,"g":"火"},"時":{"s":10,"g":"金"},"晃":{"s":10,"g":"木"},"晄":{"s":10,"g":"木"},"晋":{"s":10,"g":"金"},"晏":{"s":10,"g":"土"},"晒":{"s":10,"g":"金"},"晟":{"s":10,"g":"金"},"晦":{"s":11,"g":"木"},"晨":{"s":11,"g":"金"},"晩":{"s":12,"g":"水"},"普":{"s":12,"g":"水"},"景":{"s":12,"g":"木"},"晴":{"s":12,"g":"金"},"晶":{"s":12,"g":"金"},"智":{"s":12,"g":"火"},"暁":{"s":12,"g":"木"},"暇":{"s":13,"g":"木"},"暉":{"s":13,"g":"木"},"暑":{"s":12,"g":"金"},"暖":{"s":13,"g":"火"},"暗":{"s":13,"g":"土"},"暢":{"s":14,"g":"火"},"暦":{"s":14,"g":"火"},"暫":{"s":14,"g":"金"},"暮":{"s":14,"g":"水"},"暴":{"s":15,"g":"水"},"曇":{"s":16,"g":"火"},"曖":{"s":17,"g":"土"},"曙":{"s":17,"g":"金"},"曜":{"s":18,"g":"土"},"曝":{"s":19,"g":"水"},"曲":{"s":6,"g":"木"},"曳":{"s":6,"g":"土"},"更":{"s":7,"g":"木"},"書":{"s":10,"g":"金"},"曹":{"s":11,"g":"金"},"曽":{"s":11,"g":"金"},"曾":{"s":12,"g":"金"},"替":{"s":12,"g":"火"},"最":{"s":12,"g":"金"},"月":{"s":4,"g":"木"},"有":{"s":6,"g":"土"},"朋":{"s":8,"g":"水"},"服":{"s":8,"g":"水"},"朔":{"s":10,"g":"金"},"朕":{"s":10,"g":"火"},"朗":{"s":10,"g":"火"},"望":{"s":11,"g":"水"},"朝":{"s":12,"g":"火"},"期":{"s":12,"g":"木"},"木":{"s":4,"g":"水"},"未":{"s":5,"g":"水"},"末":{"s":5,"g":"水"},"本":{"s":5,"g":"水"},"札":{"s":5,"g":"金"},"朱":{"s":6,"g":"木"},"朴":{"s":6,"g":"水"},"机":{"s":6,"g":"木"},"朽":{"s":6,"g":"木"},"杉":{"s":7,"g":"金"},"李":{"s":7,"g":"火"},"杏":{"s":7,"g":"木"},"材":{"s":7,"g":"金"},"村":{"s":7,"g":"金"},"杖":{"s":7,"g":"金"},"杜":{"s":7,"g":"火"},"束":{"s":7,"g":"金"},"条":{"s":7,"g":"金"},"来":{"s":7,"g":"火"},"杭":{"s":8,"g":"木"},"杯":{"s":8,"g":"水"},"東":{"s":8,"g":"火"},"杵":{"s":8,"g":"金"},"杷":{"s":8,"g":"水"},"松":{"s":8,"g":"金"},"板":{"s":8,"g":"水"},"枇":{"s":8,"g":"水"},"枕":{"s":8,"g":"火"},"林":{"s":8,"g":"火"},"枚":{"s":8,"g":"水"},"果":{"s":8,"g":"木"},"枝":{"s":8,"g":"金"},"枠":{"s":8,"g":"土"},"枢":{"s":8,"g":"金"},"枯":{"s":9,"g":"木"},"架":{"s":9,"g":"木"},"柄":{"s":9,"g":"水"},"柊":{"s":9,"g":"金"},"柏":{"s":9,"g":"水"},"某":{"s":9,"g":"水"},"柑":{"s":9,"g":"木"},"染":{"s":9,"g":"金"},"柔":{"s":9,"g":"金"},"柘":{"s":9,"g":"金"},"柚":{"s":9,"g":"土"},"柱":{"s":9,"g":"火"},"柳":{"s":9,"g":"火"},"柴":{"s":10,"g":"金"},"柵":{"s":9,"g":"金"},"査":{"s":9,"g":"金"},"柾":{"s":9,"g":"水"},"柿":{"s":9,"g":"金"},"栃":{"s":9,"g":"火"},"栄":{"s":9,"g":"土"},"栓":{"s":10,"g":"金"},"栗":{"s":10,"g":"火"},"栞":{"s":10,"g":"木"},"校":{"s":10,"g":"木"},"株":{"s":10,"g":"金"},"核":{"s":10,"g":"木"},"根":{"s":10,"g":"木"},"格":{"s":10,"g":"木"},"栽":{"s":10,"g":"金"},"桁":{"s":10,"g":"木"},"桂":{"s":10,"g":"木"},"桃":{"s":10,"g":"火"},"案":{"s":10,"g":"土"},"桐":{"s":10,"g":"火"},"桑":{"s":10,"g":"金"},"桔":{"s":10,"g":"木"},"桜":{"s":10,"g":"土"},"桟":{"s":10,"g":"金"},"桧":{"s":10,"g":"木"},"桶":{"s":11,"g":"火"},"梁":{"s":11,"g":"火"},"梅":{"s":10,"g":"水"},"梓":{"s":11,"g":"金"},"梗":{"s":11,"g":"木"},"梛":{"s":11,"g":"火"},"梢":{"s":11,"g":"金"},"梧":{"s":11,"g":"木"},"梨":{"s":11,"g":"火"},"梯":{"s":11,"g":"火"},"械":{"s":11,"g":"木"},"梶":{"s":11,"g":"水"},"棄":{"s":13,"g":"木"},"棋":{"s":12,"g":"木"},"棒":{"s":12,"g":"水"},"棚":{"s":12,"g":"火"},"棟":{"s":12,"g":"火"},"森":{"s":12,"g":"金"},"棲":{"s":12,"g":"金"},"棺":{"s":12,"g":"木"},"椀":{"s":12,"g":"土"},"椅":{"s":12,"g":"土"},"椋":{"s":12,"g":"火"},"植":{"s":12,"g":"金"},"椎":{"s":12,"g":"火"},"椛":{"s":11,"g":"水"},"検":{"s":12,"g":"木"},"椰":{"s":13,"g":"土"},"椿":{"s":13,"g":"火"},"楊":{"s":13,"g":"土"},"楓":{"s":13,"g":"水"},"楕":{"s":13,"g":"火"},"楚":{"s":13,"g":"金"},"楠":{"s":13,"g":"火"},"楢":{"s":13,"g":"金"},"業":{"s":13,"g":"木"},"楯":{"s":13,"g":"金"},"極":{"s":12,"g":"木"},"楼":{"s":13,"g":"火"},"楽":{"s":13,"g":"火"},"概":{"s":14,"g":"木"},"榊":{"s":14,"g":"金"},"榎":{"s":14,"g":"木"},"榛":{"s":14,"g":"金"},"槇":{"s":14,"g":"金"},"構":{"s":14,"g":"木"},"槌":{"s":14,"g":"火"},"槍":{"s":14,"g":"金"},"様":{"s":14,"g":"土"},"槙":{"s":14,"g":"金"},"槻":{"s":15,"g":"木"},"槽":{"s":15,"g":"金"},"樋":{"s":15,"g":"火"},"標":{"s":15,"g":"水"},"樟":{"s":15,"g":"金"},"模":{"s":14,"g":"水"},"権":{"s":15,"g":"木"},"横":{"s":15,"g":"土"},"樫":{"s":15,"g":"木"},"樹":{"s":16,"g":"金"},"樺":{"s":15,"g":"木"},"橋":{"s":16,"g":"木"},"橘":{"s":16,"g":"木"},"橙":{"s":16,"g":"火"},"機":{"s":16,"g":"木"},"檀":{"s":17,"g":"火"},"檎":{"s":17,"g":"木"},"檜":{"s":17,"g":"木"},"櫂":{"s":18,"g":"火"},"櫓":{"s":19,"g":"火"},"櫛":{"s":19,"g":"金"},"欄":{"s":20,"g":"火"},"欠":{"s":4,"g":"木"},"次":{"s":6,"g":"木"},"欣":{"s":8,"g":"木"},"欧":{"s":8,"g":"土"},"欲":{"s":11,"g":"土"},"欺":{"s":12,"g":"木"},"欽":{"s":12,"g":"木"},"款":{"s":12,"g":"木"},"歌":{"s":14,"g":"木"},"歎":{"s":15,"g":"火"},"歓":{"s":15,"g":"木"},"止":{"s":4,"g":"金"},"正":{"s":5,"g":"金"},"此":{"s":6,"g":"木"},"武":{"s":8,"g":"水"},"歩":{"s":8,"g":"水"},"歯":{"s":12,"g":"金"},"歳":{"s":13,"g":"金"},"歴":{"s":14,"g":"火"},"死":{"s":6,"g":"木"},"殆":{"s":9,"g":"火"},"殉":{"s":10,"g":"金"},"殊":{"s":10,"g":"金"},"残":{"s":10,"g":"金"},"殖":{"s":12,"g":"金"},"殴":{"s":8,"g":"土"},"段":{"s":9,"g":"火"},"殺":{"s":10,"g":"金"},"殻":{"s":11,"g":"木"},"殿":{"s":13,"g":"火"},"毅":{"s":15,"g":"木"},"母":{"s":5,"g":"水"},"毎":{"s":6,"g":"水"},"毒":{"s":8,"g":"火"},"比":{"s":4,"g":"水"},"毘":{"s":9,"g":"水"},"毛":{"s":4,"g":"水"},"毬":{"s":11,"g":"木"},"氏":{"s":4,"g":"金"},"民":{"s":5,"g":"水"},"気":{"s":6,"g":"木"},"水":{"s":4,"g":"金"},"氷":{"s":5,"g":"水"},"永":{"s":5,"g":"土"},"汀":{"s":5,"g":"火"},"汁":{"s":5,"g":"金"},"求":{"s":7,"g":"木"},"汎":{"s":6,"g":"水"},"汐":{"s":6,"g":"木"},"汗":{"s":6,"g":"木"},"汚":{"s":6,"g":"土"},"汝":{"s":6,"g":"木"},"江":{"s":6,"g":"木"},"池":{"s":6,"g":"火"},"汰":{"s":7,"g":"火"},"汲":{"s":7,"g":"木"},"決":{"s":7,"g":"木"},"汽":{"s":7,"g":"木"},"沈":{"s":7,"g":"火"},"沌":{"s":7,"g":"火"},"沓":{"s":8,"g":"火"},"沖":{"s":7,"g":"火"},"沙":{"s":7,"g":"金"},"没":{"s":7,"g":"水"},"沢":{"s":7,"g":"火"},"沫":{"s":8,"g":"水"},"河":{"s":8,"g":"木"},"沸":{"s":8,"g":"水"},"油":{"s":8,"g":"土"},"治":{"s":8,"g":"金"},"沼":{"s":8,"g":"金"},"沿":{"s":8,"g":"土"},"況":{"s":8,"g":"木"},"泉":{"s":9,"g":"金"},"泊":{"s":8,"g":"水"},"泌":{"s":8,"g":"水"},"法":{"s":8,"g":"水"},"泡":{"s":8,"g":"水"},"波":{"s":8,"g":"水"},"泣":{"s":8,"g":"木"},"泥":{"s":8,"g":"火"},"注":{"s":8,"g":"火"},"泰":{"s":10,"g":"火"},"泳":{"s":8,"g":"土"},"洋":{"s":9,"g":"土"},"洗":{"s":9,"g":"金"},"洛":{"s":9,"g":"火"},"洞":{"s":9,"g":"火"},"津":{"s":9,"g":"金"},"洪":{"s":9,"g":"木"},"洲":{"s":9,"g":"金"},"洵":{"s":9,"g":"金"},"洸":{"s":9,"g":"木"},"活":{"s":9,"g":"木"},"派":{"s":9,"g":"水"},"流":{"s":10,"g":"火"},"浄":{"s":9,"g":"金"},"浅":{"s":9,"g":"金"},"浜":{"s":10,"g":"水"},"浦":{"s":10,"g":"水"},"浩":{"s":10,"g":"木"},"浪":{"s":10,"g":"火"},"浬":{"s":10,"g":"火"},"浮":{"s":10,"g":"水"},"浴":{"s":10,"g":"土"},"海":{"s":9,"g":"木"},"浸":{"s":10,"g":"金"},"消":{"s":10,"g":"金"},"涙":{"s":10,"g":"火"},"涯":{"s":11,"g":"木"},"液":{"s":11,"g":"土"},"涼":{"s":11,"g":"火"},"淀":{"s":11,"g":"火"},"淋":{"s":11,"g":"火"},"淑":{"s":11,"g":"金"},"淡":{"s":11,"g":"火"},"深":{"s":11,"g":"金"},"淳":{"s":11,"g":"金"},"淵":{"s":12,"g":"土"},"混":{"s":11,"g":"木"},"添":{"s":11,"g":"火"},"清":{"s":11,"g":"金"},"渇":{"s":11,"g":"木"},"済":{"s":11,"g":"金"},"渉":{"s":11,"g":"金"},"渋":{"s":11,"g":"金"},"渓":{"s":11,"g":"木"},"渚":{"s":11,"g":"金"},"減":{"s":12,"g":"木"},"渡":{"s":12,"g":"火"},"渥":{"s":12,"g":"土"},"渦":{"s":12,"g":"木"},"温":{"s":12,"g":"土"},"測":{"s":12,"g":"金"},"港":{"s":12,"g":"木"},"湊":{"s":12,"g":"金"},"湖":{"s":12,"g":"木"},"湘":{"s":12,"g":"金"},"湛":{"s":12,"g":"火"},"湧":{"s":12,"g":"土"},"湯":{"s":12,"g":"火"},"湾":{"s":12,"g":"土"},"湿":{"s":12,"g":"金"},"満":{"s":12,"g":"水"},"源":{"s":13,"g":"木"},"準":{"s":13,"g":"金"},"溜":{"s":13,"g":"火"},"溝":{"s":13,"g":"木"},"溢":{"s":13,"g":"土"},"溶":{"s":13,"g":"土"},"滅":{"s":13,"g":"水"},"滉":{"s":13,"g":"木"},"滋":{"s":12,"g":"金"},"滑":{"s":13,"g":"木"},"滝":{"s":13,"g":"火"},"滞":{"s":13,"g":"火"},"滴":{"s":14,"g":"火"},"漁":{"s":14,"g":"木"},"漂":{"s":14,"g":"水"},"漆":{"s":14,"g":"金"},"漏":{"s":14,"g":"火"},"演":{"s":14,"g":"土"},"漕":{"s":14,"g":"金"},"漢":{"s":13,"g":"木"},"漣":{"s":14,"g":"火"},"漬":{"s":14,"g":"火"},"漱":{"s":14,"g":"金"},"漸":{"s":14,"g":"金"},"潔":{"s":15,"g":"木"},"潜":{"s":15,"g":"金"},"潟":{"s":15,"g":"木"},"潤":{"s":15,"g":"金"},"潮":{"s":15,"g":"火"},"澄":{"s":15,"g":"火"},"澪":{"s":16,"g":"火"},"激":{"s":16,"g":"木"},"濁":{"s":16,"g":"火"},"濃":{"s":16,"g":"火"},"濡":{"s":17,"g":"金"},"濫":{"s":18,"g":"火"},"濯":{"s":17,"g":"火"},"瀕":{"s":19,"g":"水"},"瀧":{"s":19,"g":"火"},"瀬":{"s":19,"g":"火"},"灘":{"s":22,"g":"火"},"火":{"s":4,"g":"木"},"灯":{"s":6,"g":"火"},"灰":{"s":6,"g":"木"},"灸":{"s":7,"g":"木"},"灼":{"s":7,"g":"金"},"災":{"s":7,"g":"金"},"炉":{"s":8,"g":"火"},"炊":{"s":8,"g":"金"},"炎":{"s":8,"g":"土"},"炭":{"s":9,"g":"火"},"点":{"s":9,"g":"火"},"為":{"s":9,"g":"土"},"烈":{"s":10,"g":"火"},"焚":{"s":12,"g":"水"},"無":{"s":12,"g":"水"},"焦":{"s":12,"g":"金"},"焰":{"s":12,"g":"土"},"然":{"s":12,"g":"金"},"焼":{"s":12,"g":"金"},"煉":{"s":13,"g":"火"},"煌":{"s":13,"g":"木"},"煎":{"s":13,"g":"金"},"煙":{"s":13,"g":"土"},"煤":{"s":13,"g":"水"},"照":{"s":13,"g":"金"},"煩":{"s":13,"g":"水"},"煮":{"s":12,"g":"金"},"熊":{"s":14,"g":"土"},"熙":{"s":13,"g":"木"},"熱":{"s":15,"g":"火"},"燃":{"s":16,"g":"火"},"燎":{"s":16,"g":"火"},"燕":{"s":16,"g":"土"},"燥":{"s":17,"g":"金"},"燦":{"s":17,"g":"金"},"燭":{"s":17,"g":"金"},"燿":{"s":18,"g":"土"},"爆":{"s":19,"g":"水"},"爪":{"s":4,"g":"金"},"爵":{"s":17,"g":"金"},"父":{"s":4,"g":"水"},"爽":{"s":11,"g":"金"},"爾":{"s":14,"g":"金"},"片":{"s":4,"g":"水"},"版":{"s":8,"g":"水"},"牒":{"s":13,"g":"火"},"牙":{"s":4,"g":"木"},"牛":{"s":4,"g":"木"},"牟":{"s":6,"g":"水"},"牡":{"s":7,"g":"水"},"牧":{"s":8,"g":"水"},"物":{"s":8,"g":"水"},"牲":{"s":9,"g":"金"},"特":{"s":10,"g":"火"},"牽":{"s":11,"g":"木"},"犀":{"s":12,"g":"金"},"犠":{"s":17,"g":"木"},"犬":{"s":4,"g":"木"},"犯":{"s":5,"g":"水"},"状":{"s":7,"g":"金"},"狂":{"s":7,"g":"木"},"狩":{"s":9,"g":"金"},"独":{"s":9,"g":"火"},"狭":{"s":9,"g":"木"},"狼":{"s":10,"g":"火"},"猛":{"s":11,"g":"水"},"猟":{"s":11,"g":"火"},"猪":{"s":11,"g":"火"},"猫":{"s":11,"g":"水"},"献":{"s":13,"g":"木"},"猶":{"s":12,"g":"土"},"猿":{"s":13,"g":"土"},"獄":{"s":14,"g":"木"},"獅":{"s":13,"g":"金"},"獣":{"s":16,"g":"金"},"獲":{"s":16,"g":"木"},"玄":{"s":5,"g":"木"},"率":{"s":11,"g":"金"},"玉":{"s":5,"g":"木"},"王":{"s":4,"g":"土"},"玖":{"s":7,"g":"木"},"玩":{"s":8,"g":"木"},"玲":{"s":9,"g":"火"},"珀":{"s":9,"g":"水"},"珂":{"s":9,"g":"木"},"珈":{"s":9,"g":"木"},"珊":{"s":9,"g":"金"},"珍":{"s":9,"g":"火"},"珠":{"s":10,"g":"金"},"班":{"s":10,"g":"水"},"現":{"s":11,"g":"木"},"球":{"s":11,"g":"木"},"理":{"s":11,"g":"火"},"琉":{"s":11,"g":"火"},"琢":{"s":11,"g":"火"},"琥":{"s":12,"g":"木"},"琳":{"s":12,"g":"火"},"琴":{"s":12,"g":"木"},"琵":{"s":12,"g":"水"},"琶":{"s":12,"g":"水"},"瑚":{"s":13,"g":"木"},"瑛":{"s":12,"g":"土"},"瑞":{"s":13,"g":"金"},"瑠":{"s":14,"g":"火"},"瑳":{"s":14,"g":"金"},"瑶":{"s":13,"g":"土"},"璃":{"s":14,"g":"火"},"環":{"s":17,"g":"木"},"璽":{"s":19,"g":"金"},"瓢":{"s":16,"g":"水"},"瓦":{"s":5,"g":"木"},"瓶":{"s":10,"g":"水"},"甘":{"s":5,"g":"木"},"甚":{"s":9,"g":"金"},"生":{"s":5,"g":"金"},"産":{"s":11,"g":"金"},"甥":{"s":12,"g":"金"},"用":{"s":5,"g":"土"},"甫":{"s":7,"g":"水"},"田":{"s":5,"g":"火"},"由":{"s":5,"g":"土"},"甲":{"s":5,"g":"木"},"申":{"s":5,"g":"金"},"男":{"s":7,"g":"火"},"町":{"s":7,"g":"火"},"画":{"s":8,"g":"木"},"界":{"s":9,"g":"木"},"畏":{"s":9,"g":"土"},"畑":{"s":9,"g":"水"},"畔":{"s":10,"g":"水"},"留":{"s":10,"g":"火"},"畜":{"s":10,"g":"火"},"畝":{"s":10,"g":"水"},"畠":{"s":10,"g":"水"},"畢":{"s":11,"g":"水"},"略":{"s":11,"g":"火"},"番":{"s":12,"g":"水"},"異":{"s":11,"g":"土"},"畳":{"s":12,"g":"金"},"畿":{"s":15,"g":"木"},"疋":{"s":5,"g":"金"},"疎":{"s":12,"g":"金"},"疏":{"s":12,"g":"金"},"疑":{"s":14,"g":"木"},"疫":{"s":9,"g":"土"},"疲":{"s":10,"g":"水"},"疾":{"s":10,"g":"金"},"病":{"s":10,"g":"水"},"症":{"s":10,"g":"金"},"痘":{"s":12,"g":"火"},"痛":{"s":12,"g":"火"},"痢":{"s":12,"g":"火"},"痩":{"s":15,"g":"金"},"痴":{"s":13,"g":"火"},"療":{"s":17,"g":"火"},"癒":{"s":18,"g":"土"},"癖":{"s":18,"g":"水"},"発":{"s":9,"g":"水"},"登":{"s":12,"g":"火"},"白":{"s":5,"g":"水"},"百":{"s":6,"g":"水"},"的":{"s":8,"g":"火"},"皆":{"s":9,"g":"木"},"皇":{"s":9,"g":"木"},"皐":{"s":11,"g":"木"},"皓":{"s":12,"g":"木"},"皮":{"s":5,"g":"水"},"皿":{"s":5,"g":"水"},"盆":{"s":9,"g":"水"},"益":{"s":10,"g":"土"},"盗":{"s":11,"g":"火"},"盛":{"s":11,"g":"金"},"盟":{"s":13,"g":"水"},"監":{"s":15,"g":"木"},"盤":{"s":15,"g":"水"},"目":{"s":5,"g":"水"},"盲":{"s":8,"g":"水"},"直":{"s":8,"g":"火"},"相":{"s":9,"g":"金"},"盾":{"s":9,"g":"金"},"眉":{"s":9,"g":"水"},"看":{"s":9,"g":"木"},"県":{"s":9,"g":"木"},"真":{"s":10,"g":"金"},"眠":{"s":10,"g":"水"},"眸":{"s":11,"g":"水"},"眺":{"s":11,"g":"火"},"眼":{"s":11,"g":"木"},"着":{"s":12,"g":"火"},"睡":{"s":13,"g":"金"},"督":{"s":13,"g":"火"},"睦":{"s":13,"g":"水"},"瞥":{"s":17,"g":"水"},"瞬":{"s":18,"g":"金"},"瞭":{"s":17,"g":"火"},"瞳":{"s":17,"g":"火"},"矢":{"s":5,"g":"金"},"知":{"s":8,"g":"火"},"矩":{"s":10,"g":"木"},"短":{"s":12,"g":"火"},"矯":{"s":17,"g":"木"},"石":{"s":5,"g":"金"},"砂":{"s":9,"g":"金"},"研":{"s":9,"g":"木"},"砕":{"s":9,"g":"金"},"砥":{"s":10,"g":"金"},"砦":{"s":11,"g":"金"},"砧":{"s":10,"g":"火"},"砲":{"s":10,"g":"水"},"破":{"s":10,"g":"水"},"硝":{"s":12,"g":"金"},"硫":{"s":12,"g":"火"},"硬":{"s":12,"g":"木"},"硯":{"s":12,"g":"木"},"碁":{"s":13,"g":"木"},"碑":{"s":14,"g":"水"},"碓":{"s":13,"g":"火"},"碗":{"s":13,"g":"土"},"碧":{"s":14,"g":"水"},"碩":{"s":14,"g":"金"},"確":{"s":15,"g":"木"},"磁":{"s":14,"g":"金"},"磐":{"s":15,"g":"水"},"磨":{"s":16,"g":"水"},"磯":{"s":17,"g":"木"},"礁":{"s":17,"g":"金"},"礎":{"s":18,"g":"金"},"示":{"s":5,"g":"金"},"礼":{"s":5,"g":"火"},"社":{"s":7,"g":"金"},"祁":{"s":8,"g":"木"},"祇":{"s":9,"g":"木"},"祈":{"s":8,"g":"木"},"祉":{"s":8,"g":"金"},"祐":{"s":9,"g":"土"},"祖":{"s":9,"g":"金"},"祝":{"s":9,"g":"金"},"神":{"s":9,"g":"金"},"祟":{"s":11,"g":"金"},"祢":{"s":9,"g":"火"},"祥":{"s":10,"g":"金"},"票":{"s":11,"g":"水"},"祭":{"s":11,"g":"金"},"祿":{"s":13,"g":"火"},"禁":{"s":13,"g":"木"},"禄":{"s":12,"g":"火"},"禅":{"s":13,"g":"金"},"禍":{"s":13,"g":"木"},"禎":{"s":13,"g":"火"},"福":{"s":13,"g":"水"},"禰":{"s":19,"g":"火"},"禱":{"s":19,"g":"火"},"禽":{"s":13,"g":"木"},"禾":{"s":5,"g":"木"},"秀":{"s":7,"g":"金"},"私":{"s":7,"g":"金"},"秋":{"s":9,"g":"金"},"科":{"s":9,"g":"木"},"秒":{"s":9,"g":"水"},"秘":{"s":10,"g":"水"},"租":{"s":10,"g":"金"},"秤":{"s":10,"g":"金"},"秦":{"s":10,"g":"金"},"秩":{"s":10,"g":"火"},"称":{"s":10,"g":"金"},"移":{"s":11,"g":"土"},"稀":{"s":12,"g":"木"},"程":{"s":12,"g":"火"},"税":{"s":12,"g":"金"},"稔":{"s":13,"g":"火"},"稚":{"s":13,"g":"火"},"稜":{"s":13,"g":"火"},"稟":{"s":13,"g":"火"},"種":{"s":14,"g":"金"},"稲":{"s":14,"g":"火"},"稼":{"s":15,"g":"木"},"稽":{"s":15,"g":"木"},"稿":{"s":15,"g":"木"},"穂":{"s":15,"g":"金"},"積":{"s":16,"g":"金"},"穏":{"s":16,"g":"土"},"穣":{"s":18,"g":"金"},"穫":{"s":18,"g":"木"},"穴":{"s":5,"g":"木"},"究":{"s":7,"g":"木"},"空":{"s":8,"g":"木"},"穿":{"s":9,"g":"金"},"突":{"s":8,"g":"火"},"窃":{"s":9,"g":"金"},"窄":{"s":10,"g":"金"},"窒":{"s":11,"g":"火"},"窓":{"s":11,"g":"金"},"窟":{"s":13,"g":"木"},"窪":{"s":14,"g":"土"},"窮":{"s":15,"g":"木"},"窯":{"s":15,"g":"土"},"窺":{"s":16,"g":"木"},"立":{"s":5,"g":"火"},"竜":{"s":10,"g":"火"},"章":{"s":11,"g":"金"},"竣":{"s":12,"g":"金"},"童":{"s":12,"g":"火"},"竪":{"s":13,"g":"金"},"端":{"s":14,"g":"火"},"競":{"s":20,"g":"木"},"竹":{"s":6,"g":"火"},"竺":{"s":8,"g":"金"},"竿":{"s":9,"g":"木"},"笈":{"s":10,"g":"木"},"笑":{"s":10,"g":"金"},"笙":{"s":11,"g":"金"},"笛":{"s":11,"g":"火"},"笠":{"s":11,"g":"火"},"符":{"s":11,"g":"水"},"第":{"s":11,"g":"火"},"笹":{"s":11,"g":"金"},"筆":{"s":12,"g":"水"},"筈":{"s":12,"g":"木"},"等":{"s":12,"g":"火"},"筋":{"s":12,"g":"木"},"筑":{"s":12,"g":"火"},"筒":{"s":12,"g":"火"},"答":{"s":12,"g":"火"},"策":{"s":12,"g":"金"},"箇":{"s":14,"g":"木"},"箔":{"s":14,"g":"水"},"箕":{"s":14,"g":"木"},"算":{"s":14,"g":"金"},"管":{"s":14,"g":"木"},"箱":{"s":15,"g":"金"},"箸":{"s":15,"g":"火"},"節":{"s":13,"g":"金"},"範":{"s":15,"g":"水"},"篇":{"s":15,"g":"水"},"築":{"s":16,"g":"火"},"篠":{"s":17,"g":"金"},"篤":{"s":16,"g":"火"},"簞":{"s":18,"g":"火"},"簡":{"s":18,"g":"木"},"簿":{"s":19,"g":"水"},"籍":{"s":20,"g":"金"},"米":{"s":6,"g":"水"},"籾":{"s":9,"g":"水"},"粉":{"s":10,"g":"水"},"粋":{"s":10,"g":"金"},"粒":{"s":11,"g":"火"},"粗":{"s":11,"g":"金"},"粘":{"s":11,"g":"火"},"粛":{"s":11,"g":"金"},"粞":{"s":10,"g":"金"},"粟":{"s":12,"g":"金"},"粥":{"s":12,"g":"金"},"粧":{"s":12,"g":"金"},"精":{"s":14,"g":"金"},"糊":{"s":15,"g":"木"},"糖":{"s":16,"g":"火"},"糧":{"s":18,"g":"火"},"糸":{"s":6,"g":"木"},"系":{"s":7,"g":"木"},"糾":{"s":9,"g":"木"},"紀":{"s":9,"g":"木"},"約":{"s":9,"g":"土"},"紅":{"s":9,"g":"木"},"紋":{"s":10,"g":"水"},"納":{"s":10,"g":"火"},"紐":{"s":10,"g":"火"},"純":{"s":10,"g":"金"},"紗":{"s":10,"g":"金"},"紘":{"s":10,"g":"木"},"紙":{"s":10,"g":"金"},"級":{"s":10,"g":"木"},"紛":{"s":10,"g":"水"},"素":{"s":10,"g":"金"},"紡":{"s":10,"g":"水"},"索":{"s":10,"g":"金"},"紫":{"s":12,"g":"金"},"紬":{"s":11,"g":"火"},"累":{"s":11,"g":"火"},"細":{"s":11,"g":"金"},"紳":{"s":11,"g":"金"},"紹":{"s":11,"g":"金"},"紺":{"s":11,"g":"木"},"終":{"s":11,"g":"金"},"絃":{"s":11,"g":"木"},"組":{"s":11,"g":"金"},"絆":{"s":11,"g":"水"},"経":{"s":11,"g":"木"},"結":{"s":12,"g":"木"},"絞":{"s":12,"g":"木"},"絡":{"s":12,"g":"火"},"絢":{"s":12,"g":"木"},"給":{"s":12,"g":"木"},"統":{"s":12,"g":"火"},"絵":{"s":12,"g":"木"},"絶":{"s":12,"g":"金"},"絹":{"s":13,"g":"木"},"継":{"s":13,"g":"木"},"続":{"s":13,"g":"金"},"綜":{"s":14,"g":"金"},"維":{"s":14,"g":"土"},"綱":{"s":14,"g":"木"},"網":{"s":14,"g":"水"},"綴":{"s":14,"g":"火"},"綸":{"s":14,"g":"火"},"綺":{"s":14,"g":"木"},"綾":{"s":14,"g":"火"},"綿":{"s":14,"g":"水"},"緊":{"s":15,"g":"木"},"緋":{"s":14,"g":"水"},"総":{"s":14,"g":"金"},"緑":{"s":14,"g":"火"},"緒":{"s":14,"g":"金"},"線":{"s":15,"g":"金"},"締":{"s":15,"g":"火"},"編":{"s":15,"g":"水"},"緩":{"s":15,"g":"木"},"緯":{"s":16,"g":"土"},"練":{"s":14,"g":"火"},"縁":{"s":15,"g":"土"},"縄":{"s":15,"g":"金"},"縛":{"s":16,"g":"水"},"縞":{"s":16,"g":"木"},"縦":{"s":16,"g":"金"},"縫":{"s":16,"g":"水"},"縮":{"s":17,"g":"金"},"績":{"s":17,"g":"金"},"繁":{"s":16,"g":"水"},"繍":{"s":18,"g":"金"},"織":{"s":18,"g":"金"},"繕":{"s":18,"g":"金"},"繫":{"s":19,"g":"木"},"繭":{"s":18,"g":"木"},"繰":{"s":19,"g":"金"},"纂":{"s":20,"g":"金"},"纏":{"s":21,"g":"火"},"缶":{"s":6,"g":"木"},"罪":{"s":13,"g":"金"},"置":{"s":13,"g":"火"},"罰":{"s":14,"g":"水"},"署":{"s":13,"g":"金"},"羅":{"s":19,"g":"火"},"羆":{"s":15,"g":"水"},"羊":{"s":6,"g":"土"},"美":{"s":9,"g":"水"},"羚":{"s":11,"g":"火"},"群":{"s":13,"g":"木"},"羨":{"s":13,"g":"金"},"義":{"s":13,"g":"木"},"羽":{"s":6,"g":"土"},"翁":{"s":10,"g":"土"},"翌":{"s":11,"g":"土"},"習":{"s":11,"g":"金"},"翔":{"s":12,"g":"金"},"翠":{"s":14,"g":"金"},"翻":{"s":18,"g":"水"},"翼":{"s":17,"g":"土"},"耀":{"s":20,"g":"土"},"老":{"s":6,"g":"火"},"考":{"s":6,"g":"木"},"者":{"s":8,"g":"金"},"而":{"s":6,"g":"木"},"耐":{"s":9,"g":"火"},"耕":{"s":10,"g":"木"},"耳":{"s":6,"g":"木"},"耶":{"s":9,"g":"土"},"耽":{"s":10,"g":"火"},"聖":{"s":13,"g":"金"},"聞":{"s":14,"g":"水"},"聡":{"s":14,"g":"金"},"聴":{"s":17,"g":"火"},"職":{"s":18,"g":"金"},"肇":{"s":14,"g":"火"},"肉":{"s":6,"g":"火"},"肌":{"s":6,"g":"水"},"肖":{"s":7,"g":"金"},"肘":{"s":7,"g":"火"},"肝":{"s":7,"g":"木"},"肢":{"s":8,"g":"金"},"肥":{"s":8,"g":"水"},"肩":{"s":8,"g":"木"},"肪":{"s":8,"g":"水"},"肯":{"s":8,"g":"木"},"育":{"s":8,"g":"土"},"肴":{"s":8,"g":"木"},"肺":{"s":9,"g":"水"},"胃":{"s":9,"g":"土"},"胆":{"s":9,"g":"火"},"背":{"s":9,"g":"水"},"胎":{"s":9,"g":"火"},"胞":{"s":9,"g":"水"},"胡":{"s":9,"g":"木"},"胤":{"s":9,"g":"土"},"胴":{"s":10,"g":"火"},"胸":{"s":10,"g":"木"},"能":{"s":10,"g":"火"},"脂":{"s":10,"g":"金"},"脅":{"s":10,"g":"木"},"脇":{"s":10,"g":"木"},"脈":{"s":10,"g":"水"},"脚":{"s":11,"g":"木"},"脩":{"s":11,"g":"金"},"脱":{"s":11,"g":"火"},"脳":{"s":11,"g":"火"},"脹":{"s":12,"g":"火"},"腎":{"s":12,"g":"金"},"腐":{"s":14,"g":"水"},"腔":{"s":12,"g":"木"},"腕":{"s":12,"g":"土"},"腰":{"s":13,"g":"土"},"腸":{"s":13,"g":"火"},"腹":{"s":13,"g":"水"},"膏":{"s":14,"g":"木"},"膚":{"s":15,"g":"水"},"膜":{"s":14,"g":"水"},"膨":{"s":16,"g":"水"},"膳":{"s":16,"g":"金"},"臆":{"s":17,"g":"土"},"臓":{"s":19,"g":"金"},"臣":{"s":7,"g":"金"},"臥":{"s":8,"g":"木"},"臨":{"s":18,"g":"火"},"自":{"s":6,"g":"木"},"臭":{"s":9,"g":"金"},"至":{"s":6,"g":"木"},"致":{"s":10,"g":"火"},"臼":{"s":6,"g":"木"},"興":{"s":16,"g":"木"},"舌":{"s":6,"g":"木"},"舎":{"s":8,"g":"金"},"舗":{"s":15,"g":"水"},"舜":{"s":12,"g":"金"},"舞":{"s":15,"g":"水"},"舟":{"s":6,"g":"木"},"航":{"s":10,"g":"木"},"般":{"s":10,"g":"水"},"舵":{"s":11,"g":"火"},"舶":{"s":11,"g":"水"},"舷":{"s":11,"g":"木"},"船":{"s":11,"g":"金"},"艇":{"s":13,"g":"火"},"艦":{"s":21,"g":"木"},"良":{"s":7,"g":"火"},"色":{"s":6,"g":"木"},"艶":{"s":19,"g":"土"},"芋":{"s":6,"g":"土"},"芙":{"s":7,"g":"水"},"芝":{"s":6,"g":"木"},"芥":{"s":7,"g":"木"},"芦":{"s":7,"g":"火"},"芭":{"s":7,"g":"水"},"芯":{"s":7,"g":"金"},"花":{"s":7,"g":"木"},"芳":{"s":7,"g":"水"},"芸":{"s":7,"g":"木"},"芹":{"s":7,"g":"木"},"芽":{"s":8,"g":"木"},"苑":{"s":8,"g":"土"},"苔":{"s":8,"g":"火"},"苗":{"s":8,"g":"水"},"若":{"s":8,"g":"金"},"苦":{"s":8,"g":"木"},"英":{"s":8,"g":"土"},"苺":{"s":8,"g":"水"},"茂":{"s":8,"g":"水"},"茄":{"s":8,"g":"木"},"茅":{"s":8,"g":"木"},"茉":{"s":8,"g":"水"},"茎":{"s":8,"g":"木"},"茜":{"s":9,"g":"金"},"茨":{"s":9,"g":"金"},"茶":{"s":9,"g":"火"},"茸":{"s":9,"g":"金"},"草":{"s":9,"g":"金"},"荒":{"s":9,"g":"木"},"荘":{"s":9,"g":"金"},"荷":{"s":10,"g":"木"},"荻":{"s":10,"g":"火"},"莉":{"s":10,"g":"火"},"莞":{"s":10,"g":"木"},"莫":{"s":10,"g":"水"},"菅":{"s":11,"g":"木"},"菊":{"s":11,"g":"木"},"菌":{"s":11,"g":"木"},"菖":{"s":11,"g":"金"},"菜":{"s":11,"g":"金"},"菩":{"s":11,"g":"水"},"菫":{"s":11,"g":"木"},"華":{"s":10,"g":"木"},"菱":{"s":11,"g":"火"},"萄":{"s":11,"g":"火"},"萊":{"s":11,"g":"火"},"萌":{"s":11,"g":"水"},"萠":{"s":11,"g":"水"},"萩":{"s":12,"g":"金"},"萱":{"s":12,"g":"木"},"落":{"s":12,"g":"火"},"葉":{"s":12,"g":"土"},"著":{"s":11,"g":"火"},"葛":{"s":12,"g":"木"},"葡":{"s":12,"g":"水"},"董":{"s":12,"g":"火"},"葦":{"s":13,"g":"土"},"葬":{"s":12,"g":"金"},"葵":{"s":12,"g":"木"},"葺":{"s":12,"g":"金"},"蒐":{"s":13,"g":"金"},"蒔":{"s":13,"g":"金"},"蒙":{"s":14,"g":"水"},"蒲":{"s":14,"g":"水"},"蒸":{"s":13,"g":"金"},"蒼":{"s":13,"g":"金"},"蓄":{"s":13,"g":"火"},"蓉":{"s":13,"g":"土"},"蓋":{"s":13,"g":"木"},"蓑":{"s":14,"g":"金"},"蓬":{"s":14,"g":"水"},"蓮":{"s":13,"g":"火"},"蔀":{"s":14,"g":"水"},"蔓":{"s":14,"g":"水"},"蔣":{"s":14,"g":"金"},"蔦":{"s":14,"g":"火"},"蔭":{"s":14,"g":"土"},"蔵":{"s":15,"g":"金"},"蕃":{"s":15,"g":"水"},"蕉":{"s":15,"g":"金"},"蕎":{"s":15,"g":"木"},"蕗":{"s":16,"g":"火"},"蕨":{"s":15,"g":"木"},"蕪":{"s":15,"g":"水"},"蕾":{"s":16,"g":"火"},"薄":{"s":16,"g":"水"},"薙":{"s":16,"g":"火"},"薦":{"s":16,"g":"金"},"薩":{"s":17,"g":"金"},"薪":{"s":16,"g":"金"},"薫":{"s":16,"g":"木"},"薬":{"s":16,"g":"土"},"藁":{"s":17,"g":"木"},"藍":{"s":18,"g":"火"},"藤":{"s":18,"g":"火"},"藩":{"s":18,"g":"水"},"藪":{"s":15,"g":"水"},"藻":{"s":19,"g":"金"},"蘇":{"s":19,"g":"金"},"蘭":{"s":19,"g":"火"},"虎":{"s":8,"g":"木"},"虐":{"s":9,"g":"木"},"虚":{"s":11,"g":"木"},"虜":{"s":13,"g":"火"},"虞":{"s":13,"g":"木"},"虫":{"s":6,"g":"火"},"虹":{"s":9,"g":"木"},"蚊":{"s":10,"g":"水"},"蚕":{"s":10,"g":"金"},"蛇":{"s":11,"g":"金"},"蛍":{"s":11,"g":"木"},"蛮":{"s":12,"g":"水"},"蜂":{"s":13,"g":"水"},"蝦":{"s":15,"g":"木"},"蝶":{"s":15,"g":"火"},"融":{"s":16,"g":"土"},"螺":{"s":17,"g":"火"},"蟬":{"s":18,"g":"金"},"蟹":{"s":19,"g":"木"},"蠟":{"s":21,"g":"火"},"血":{"s":6,"g":"木"},"衆":{"s":12,"g":"金"},"行":{"s":6,"g":"木"},"術":{"s":11,"g":"金"},"街":{"s":12,"g":"木"},"衛":{"s":16,"g":"土"},"衝":{"s":15,"g":"金"},"衣":{"s":6,"g":"土"},"表":{"s":8,"g":"水"},"衰":{"s":10,"g":"金"},"衷":{"s":9,"g":"火"},"衿":{"s":9,"g":"木"},"袈":{"s":11,"g":"木"},"袋":{"s":11,"g":"火"},"袖":{"s":10,"g":"金"},"被":{"s":10,"g":"水"},"袴":{"s":11,"g":"木"},"裁":{"s":12,"g":"金"},"裂":{"s":12,"g":"火"},"装":{"s":12,"g":"金"},"裏":{"s":13,"g":"火"},"裕":{"s":12,"g":"土"},"補":{"s":12,"g":"水"},"裟":{"s":13,"g":"金"},"裡":{"s":12,"g":"火"},"裳":{"s":14,"g":"金"},"裸":{"s":13,"g":"火"},"製":{"s":14,"g":"金"},"裾":{"s":13,"g":"木"},"複":{"s":14,"g":"水"},"褐":{"s":13,"g":"木"},"褒":{"s":15,"g":"水"},"襟":{"s":18,"g":"木"},"襲":{"s":22,"g":"金"},"西":{"s":6,"g":"金"},"要":{"s":9,"g":"土"},"覆":{"s":18,"g":"水"},"覇":{"s":19,"g":"水"},"見":{"s":7,"g":"木"},"規":{"s":11,"g":"木"},"視":{"s":11,"g":"金"},"覚":{"s":12,"g":"木"},"覧":{"s":17,"g":"火"},"親":{"s":16,"g":"金"},"観":{"s":18,"g":"木"},"角":{"s":7,"g":"木"},"解":{"s":13,"g":"木"},"触":{"s":13,"g":"金"},"言":{"s":7,"g":"木"},"訂":{"s":9,"g":"火"},"計":{"s":9,"g":"木"},"訊":{"s":10,"g":"金"},"討":{"s":10,"g":"火"},"訓":{"s":10,"g":"木"},"託":{"s":10,"g":"火"},"記":{"s":10,"g":"木"},"訟":{"s":11,"g":"金"},"訣":{"s":11,"g":"木"},"訪":{"s":11,"g":"水"},"設":{"s":11,"g":"金"},"許":{"s":11,"g":"木"},"訳":{"s":11,"g":"土"},"訴":{"s":12,"g":"金"},"診":{"s":12,"g":"金"},"註":{"s":12,"g":"火"},"証":{"s":12,"g":"金"},"詐":{"s":12,"g":"金"},"詔":{"s":12,"g":"金"},"評":{"s":12,"g":"水"},"詞":{"s":12,"g":"金"},"詠":{"s":12,"g":"土"},"詢":{"s":13,"g":"金"},"詣":{"s":13,"g":"木"},"試":{"s":13,"g":"金"},"詩":{"s":13,"g":"金"},"詫":{"s":13,"g":"火"},"詮":{"s":13,"g":"金"},"詰":{"s":13,"g":"木"},"話":{"s":13,"g":"土"},"該":{"s":13,"g":"木"},"誇":{"s":13,"g":"木"},"誉":{"s":13,"g":"土"},"誌":{"s":14,"g":"金"},"認":{"s":14,"g":"火"},"誕":{"s":15,"g":"火"},"誘":{"s":14,"g":"土"},"語":{"s":14,"g":"木"},"誠":{"s":13,"g":"金"},"誤":{"s":14,"g":"木"},"説":{"s":14,"g":"金"},"読":{"s":14,"g":"火"},"誰":{"s":15,"g":"金"},"課":{"s":15,"g":"木"},"誼":{"s":15,"g":"木"},"調":{"s":15,"g":"火"},"諄":{"s":15,"g":"金"},"談":{"s":15,"g":"火"},"請":{"s":15,"g":"金"},"諒":{"s":15,"g":"火"},"論":{"s":15,"g":"火"},"諦":{"s":16,"g":"火"},"諭":{"s":16,"g":"土"},"諮":{"s":16,"g":"金"},"諸":{"s":15,"g":"金"},"諺":{"s":16,"g":"木"},"諾":{"s":15,"g":"火"},"謀":{"s":16,"g":"水"},"謁":{"s":15,"g":"土"},"謂":{"s":16,"g":"土"},"謄":{"s":17,"g":"火"},"謎":{"s":17,"g":"水"},"謙":{"s":17,"g":"木"},"講":{"s":17,"g":"木"},"謝":{"s":17,"g":"金"},"謡":{"s":16,"g":"土"},"謹":{"s":17,"g":"木"},"識":{"s":19,"g":"金"},"譜":{"s":19,"g":"水"},"警":{"s":19,"g":"木"},"議":{"s":20,"g":"木"},"護":{"s":20,"g":"木"},"讃":{"s":22,"g":"金"},"谷":{"s":7,"g":"木"},"豆":{"s":7,"g":"火"},"豊":{"s":13,"g":"水"},"豚":{"s":11,"g":"火"},"象":{"s":12,"g":"金"},"豪":{"s":14,"g":"木"},"豹":{"s":10,"g":"水"},"貌":{"s":14,"g":"水"},"貝":{"s":7,"g":"水"},"貞":{"s":9,"g":"火"},"負":{"s":9,"g":"水"},"財":{"s":10,"g":"金"},"貢":{"s":10,"g":"木"},"貧":{"s":11,"g":"水"},"貨":{"s":11,"g":"木"},"販":{"s":11,"g":"水"},"貫":{"s":11,"g":"木"},"責":{"s":11,"g":"金"},"貯":{"s":12,"g":"火"},"貴":{"s":12,"g":"木"},"買":{"s":12,"g":"水"},"貸":{"s":12,"g":"火"},"費":{"s":12,"g":"水"},"貼":{"s":12,"g":"火"},"貿":{"s":12,"g":"水"},"賀":{"s":12,"g":"木"},"賃":{"s":13,"g":"火"},"賄":{"s":13,"g":"土"},"資":{"s":13,"g":"金"},"賊":{"s":13,"g":"金"},"賑":{"s":14,"g":"金"},"賓":{"s":15,"g":"水"},"賛":{"s":15,"g":"金"},"賜":{"s":15,"g":"金"},"賞":{"s":15,"g":"金"},"賠":{"s":15,"g":"水"},"賢":{"s":16,"g":"木"},"賦":{"s":15,"g":"水"},"質":{"s":15,"g":"金"},"購":{"s":17,"g":"木"},"贈":{"s":18,"g":"金"},"赤":{"s":7,"g":"金"},"赦":{"s":11,"g":"金"},"走":{"s":7,"g":"金"},"赳":{"s":9,"g":"木"},"赴":{"s":9,"g":"水"},"起":{"s":10,"g":"木"},"超":{"s":12,"g":"火"},"越":{"s":12,"g":"土"},"趣":{"s":15,"g":"金"},"足":{"s":7,"g":"金"},"距":{"s":12,"g":"木"},"跡":{"s":13,"g":"金"},"跨":{"s":13,"g":"木"},"路":{"s":13,"g":"火"},"跳":{"s":13,"g":"火"},"践":{"s":13,"g":"金"},"踊":{"s":14,"g":"土"},"踏":{"s":15,"g":"火"},"蹄":{"s":16,"g":"火"},"蹟":{"s":18,"g":"金"},"蹴":{"s":19,"g":"金"},"躍":{"s":21,"g":"土"},"身":{"s":7,"g":"金"},"車":{"s":7,"g":"金"},"軌":{"s":9,"g":"木"},"軍":{"s":9,"g":"木"},"軒":{"s":10,"g":"木"},"軟":{"s":11,"g":"火"},"転":{"s":11,"g":"火"},"軸":{"s":12,"g":"金"},"軽":{"s":12,"g":"木"},"較":{"s":13,"g":"木"},"載":{"s":13,"g":"金"},"輔":{"s":14,"g":"水"},"輝":{"s":15,"g":"木"},"輩":{"s":15,"g":"水"},"輪":{"s":15,"g":"火"},"輯":{"s":16,"g":"金"},"輸":{"s":16,"g":"土"},"轄":{"s":17,"g":"木"},"轟":{"s":21,"g":"木"},"辛":{"s":7,"g":"金"},"辞":{"s":13,"g":"金"},"辰":{"s":7,"g":"金"},"辱":{"s":10,"g":"金"},"農":{"s":13,"g":"火"},"辺":{"s":5,"g":"水"},"辻":{"s":6,"g":"火"},"込":{"s":5,"g":"木"},"辿":{"s":7,"g":"火"},"迂":{"s":7,"g":"土"},"迄":{"s":7,"g":"木"},"迅":{"s":6,"g":"木"},"迎":{"s":7,"g":"木"},"近":{"s":7,"g":"木"},"返":{"s":7,"g":"水"},"迦":{"s":9,"g":"木"},"迪":{"s":8,"g":"火"},"迫":{"s":8,"g":"水"},"迭":{"s":8,"g":"火"},"述":{"s":8,"g":"金"},"迷":{"s":9,"g":"水"},"追":{"s":9,"g":"火"},"退":{"s":9,"g":"火"},"送":{"s":9,"g":"金"},"逃":{"s":9,"g":"火"},"逆":{"s":9,"g":"木"},"透":{"s":10,"g":"火"},"逐":{"s":10,"g":"火"},"逓":{"s":10,"g":"火"},"途":{"s":10,"g":"火"},"逗":{"s":11,"g":"火"},"這":{"s":11,"g":"木"},"通":{"s":10,"g":"火"},"逝":{"s":10,"g":"金"},"逞":{"s":11,"g":"火"},"造":{"s":10,"g":"金"},"逢":{"s":11,"g":"水"},"連":{"s":10,"g":"火"},"逮":{"s":11,"g":"火"},"週":{"s":11,"g":"金"},"進":{"s":11,"g":"金"},"逸":{"s":11,"g":"土"},"遁":{"s":13,"g":"火"},"遂":{"s":12,"g":"金"},"遅":{"s":12,"g":"火"},"遇":{"s":12,"g":"木"},"遊":{"s":12,"g":"土"},"運":{"s":12,"g":"土"},"遍":{"s":12,"g":"水"},"過":{"s":12,"g":"木"},"道":{"s":12,"g":"火"},"達":{"s":12,"g":"火"},"違":{"s":13,"g":"土"},"遙":{"s":14,"g":"土"},"遜":{"s":14,"g":"金"},"遠":{"s":10,"g":"金"},"遡":{"s":14,"g":"金"},"遣":{"s":13,"g":"木"},"遥":{"s":12,"g":"土"},"適":{"s":14,"g":"火"},"遭":{"s":14,"g":"金"},"遮":{"s":14,"g":"金"},"遵":{"s":15,"g":"金"},"遷":{"s":15,"g":"金"},"選":{"s":15,"g":"金"},"遺":{"s":15,"g":"土"},"遼":{"s":15,"g":"火"},"避":{"s":16,"g":"水"},"還":{"s":16,"g":"木"},"邑":{"s":7,"g":"土"},"那":{"s":7,"g":"火"},"邦":{"s":7,"g":"水"},"邪":{"s":8,"g":"金"},"邸":{"s":8,"g":"火"},"郁":{"s":9,"g":"土"},"郊":{"s":9,"g":"木"},"郎":{"s":9,"g":"火"},"郡":{"s":10,"g":"木"},"部":{"s":11,"g":"水"},"郭":{"s":11,"g":"木"},"郵":{"s":11,"g":"土"},"郷":{"s":11,"g":"木"},"都":{"s":11,"g":"火"},"鄭":{"s":15,"g":"火"},"酉":{"s":7,"g":"土"},"酌":{"s":10,"g":"金"},"配":{"s":10,"g":"水"},"酎":{"s":10,"g":"火"},"酒":{"s":10,"g":"金"},"酔":{"s":11,"g":"金"},"酢":{"s":12,"g":"金"},"酪":{"s":13,"g":"火"},"酬":{"s":13,"g":"金"},"酵":{"s":14,"g":"木"},"酷":{"s":14,"g":"木"},"酸":{"s":14,"g":"金"},"醇":{"s":15,"g":"金"},"醐":{"s":16,"g":"木"},"醒":{"s":16,"g":"金"},"醜":{"s":17,"g":"金"},"醬":{"s":18,"g":"金"},"醸":{"s":20,"g":"金"},"采":{"s":8,"g":"金"},"釈":{"s":11,"g":"金"},"釉":{"s":12,"g":"土"},"里":{"s":7,"g":"火"},"重":{"s":9,"g":"金"},"野":{"s":11,"g":"土"},"量":{"s":12,"g":"火"},"金":{"s":8,"g":"木"},"釗":{"s":11,"g":"金"},"釘":{"s":10,"g":"火"},"釜":{"s":10,"g":"水"},"針":{"s":10,"g":"金"},"釣":{"s":11,"g":"火"},"鈍":{"s":12,"g":"火"},"鈴":{"s":13,"g":"火"},"鉄":{"s":13,"g":"火"},"鉛":{"s":13,"g":"土"},"鉢":{"s":13,"g":"水"},"鉱":{"s":13,"g":"木"},"銀":{"s":14,"g":"木"},"銃":{"s":14,"g":"金"},"銅":{"s":14,"g":"火"},"銑":{"s":14,"g":"金"},"銘":{"s":14,"g":"水"},"銭":{"s":14,"g":"金"},"鋒":{"s":15,"g":"水"},"鋭":{"s":15,"g":"土"},"鋳":{"s":15,"g":"火"},"鋸":{"s":16,"g":"木"},"鋼":{"s":16,"g":"木"},"錆":{"s":16,"g":"金"},"錐":{"s":16,"g":"金"},"錘":{"s":16,"g":"金"},"錠":{"s":16,"g":"金"},"錦":{"s":16,"g":"木"},"錫":{"s":16,"g":"金"},"錬":{"s":16,"g":"火"},"錯":{"s":16,"g":"金"},"録":{"s":16,"g":"火"},"鍋":{"s":17,"g":"木"},"鍛":{"s":17,"g":"火"},"鍬":{"s":17,"g":"金"},"鍵":{"s":17,"g":"木"},"鎌":{"s":18,"g":"火"},"鎖":{"s":18,"g":"金"},"鎧":{"s":18,"g":"木"},"鎮":{"s":18,"g":"火"},"鏡":{"s":19,"g":"木"},"鐘":{"s":20,"g":"金"},"鑑":{"s":22,"g":"木"},"長":{"s":8,"g":"火"},"門":{"s":8,"g":"水"},"閃":{"s":10,"g":"金"},"閉":{"s":11,"g":"水"},"開":{"s":12,"g":"木"},"閏":{"s":12,"g":"金"},"閑":{"s":12,"g":"木"},"間":{"s":12,"g":"木"},"関":{"s":14,"g":"木"},"閣":{"s":14,"g":"木"},"閤":{"s":14,"g":"木"},"閥":{"s":14,"g":"水"},"閲":{"s":15,"g":"土"},"闇":{"s":17,"g":"土"},"闘":{"s":18,"g":"火"},"阜":{"s":8,"g":"水"},"阪":{"s":7,"g":"水"},"防":{"s":7,"g":"水"},"阻":{"s":8,"g":"金"},"阿":{"s":8,"g":"土"},"陀":{"s":8,"g":"火"},"附":{"s":8,"g":"水"},"降":{"s":10,"g":"木"},"限":{"s":9,"g":"木"},"陛":{"s":10,"g":"水"},"院":{"s":10,"g":"土"},"陣":{"s":10,"g":"金"},"除":{"s":10,"g":"金"},"陥":{"s":10,"g":"木"},"陪":{"s":11,"g":"水"},"陰":{"s":11,"g":"土"},"陳":{"s":11,"g":"火"},"陵":{"s":11,"g":"火"},"陶":{"s":11,"g":"火"},"陸":{"s":11,"g":"火"},"険":{"s":11,"g":"木"},"陽":{"s":12,"g":"土"},"隅":{"s":12,"g":"木"},"隆":{"s":11,"g":"火"},"隈":{"s":12,"g":"土"},"隊":{"s":12,"g":"火"},"階":{"s":12,"g":"木"},"随":{"s":12,"g":"金"},"隔":{"s":13,"g":"木"},"隙":{"s":13,"g":"木"},"際":{"s":14,"g":"金"},"障":{"s":14,"g":"金"},"隠":{"s":14,"g":"土"},"隣":{"s":16,"g":"火"},"隷":{"s":16,"g":"火"},"隻":{"s":10,"g":"金"},"隼":{"s":10,"g":"金"},"雀":{"s":11,"g":"金"},"雁":{"s":12,"g":"木"},"雄":{"s":12,"g":"土"},"雅":{"s":13,"g":"木"},"集":{"s":12,"g":"金"},"雇":{"s":12,"g":"木"},"雌":{"s":14,"g":"金"},"雑":{"s":14,"g":"金"},"雛":{"s":18,"g":"金"},"離":{"s":18,"g":"火"},"難":{"s":18,"g":"火"},"雨":{"s":8,"g":"土"},"雪":{"s":11,"g":"金"},"雫":{"s":11,"g":"火"},"雰":{"s":12,"g":"水"},"雲":{"s":12,"g":"土"},"零":{"s":13,"g":"火"},"雷":{"s":13,"g":"火"},"電":{"s":13,"g":"火"},"需":{"s":14,"g":"金"},"震":{"s":15,"g":"金"},"霊":{"s":15,"g":"火"},"霜":{"s":17,"g":"金"},"霞":{"s":17,"g":"木"},"霧":{"s":19,"g":"水"},"露":{"s":21,"g":"火"},"青":{"s":8,"g":"金"},"靖":{"s":13,"g":"金"},"静":{"s":14,"g":"金"},"非":{"s":8,"g":"水"},"面":{"s":9,"g":"水"},"革":{"s":9,"g":"木"},"靴":{"s":13,"g":"木"},"鞄":{"s":15,"g":"水"},"鞍":{"s":15,"g":"土"},"鞕":{"s":18,"g":"水"},"鞘":{"s":16,"g":"金"},"鞠":{"s":17,"g":"木"},"韓":{"s":17,"g":"木"},"音":{"s":9,"g":"土"},"韻":{"s":19,"g":"土"},"頁":{"s":9,"g":"木"},"頂":{"s":11,"g":"火"},"頃":{"s":11,"g":"木"},"項":{"s":12,"g":"木"},"順":{"s":12,"g":"金"},"須":{"s":12,"g":"金"},"頌":{"s":13,"g":"金"},"預":{"s":13,"g":"土"},"頑":{"s":13,"g":"木"},"頒":{"s":13,"g":"水"},"頓":{"s":13,"g":"火"},"頗":{"s":14,"g":"水"},"領":{"s":14,"g":"火"},"頭":{"s":16,"g":"火"},"頰":{"s":16,"g":"木"},"頻":{"s":17,"g":"水"},"頼":{"s":16,"g":"火"},"題":{"s":18,"g":"火"},"額":{"s":18,"g":"木"},"顔":{"s":18,"g":"木"},"顕":{"s":18,"g":"木"},"願":{"s":19,"g":"木"},"顚":{"s":19,"g":"火"},"類":{"s":18,"g":"火"},"顧":{"s":21,"g":"木"},"風":{"s":9,"g":"水"},"颯":{"s":14,"g":"金"},"飛":{"s":9,"g":"水"},"食":{"s":9,"g":"金"},"飢":{"s":10,"g":"木"},"飯":{"s":12,"g":"水"},"飲":{"s":12,"g":"土"},"飼":{"s":13,"g":"金"},"飽":{"s":13,"g":"水"},"飾":{"s":13,"g":"金"},"餅":{"s":15,"g":"水"},"養":{"s":15,"g":"土"},"餓":{"s":15,"g":"木"},"館":{"s":16,"g":"木"},"饗":{"s":22,"g":"木"},"首":{"s":9,"g":"金"},"香":{"s":9,"g":"木"},"馨":{"s":20,"g":"木"},"馬":{"s":10,"g":"水"},"馳":{"s":13,"g":"火"},"馴":{"s":13,"g":"金"},"駄":{"s":14,"g":"火"},"駅":{"s":14,"g":"土"},"駆":{"s":14,"g":"木"},"駐":{"s":15,"g":"火"},"駒":{"s":15,"g":"木"},"駕":{"s":15,"g":"木"},"駿":{"s":17,"g":"金"},"騎":{"s":18,"g":"木"},"騒":{"s":18,"g":"金"},"験":{"s":18,"g":"木"},"騰":{"s":20,"g":"火"},"驍":{"s":22,"g":"木"},"驚":{"s":22,"g":"木"},"骨":{"s":10,"g":"木"},"髄":{"s":19,"g":"金"},"高":{"s":10,"g":"木"},"髪":{"s":14,"g":"水"},"鬼":{"s":10,"g":"木"},"魁":{"s":14,"g":"木"},"魂":{"s":14,"g":"木"},"魅":{"s":15,"g":"水"},"魔":{"s":21,"g":"水"},"魚":{"s":11,"g":"木"},"魯":{"s":15,"g":"火"},"鮎":{"s":16,"g":"火"},"鮮":{"s":17,"g":"金"},"鯉":{"s":18,"g":"火"},"鯛":{"s":19,"g":"火"},"鯨":{"s":19,"g":"木"},"鱒":{"s":23,"g":"金"},"鱗":{"s":23,"g":"火"},"鳥":{"s":10,"g":"土"},"鳩":{"s":13,"g":"木"},"鳳":{"s":14,"g":"水"},"鳴":{"s":14,"g":"水"},"鴨":{"s":16,"g":"土"},"鴻":{"s":17,"g":"木"},"鵜":{"s":18,"g":"火"},"鵬":{"s":19,"g":"水"},"鶏":{"s":19,"g":"木"},"鶴":{"s":21,"g":"木"},"鷗":{"s":22,"g":"土"},"鷲":{"s":23,"g":"金"},"鷹":{"s":24,"g":"土"},"鷺":{"s":24,"g":"火"},"鹿":{"s":11,"g":"火"},"麒":{"s":19,"g":"木"},"麓":{"s":19,"g":"火"},"麗":{"s":19,"g":"火"},"麟":{"s":23,"g":"火"},"麦":{"s":7,"g":"水"},"麻":{"s":11,"g":"水"},"麿":{"s":18,"g":"水"},"黄":{"s":11,"g":"土"},"黎":{"s":15,"g":"火"},"黒":{"s":11,"g":"木"},"黙":{"s":15,"g":"水"},"黛":{"s":16,"g":"火"},"鼎":{"s":13,"g":"火"},"鼓":{"s":13,"g":"木"},"鼻":{"s":14,"g":"水"},"齢":{"s":17,"g":"火"},"條":{"s":11,"g":"金"},"邉":{"s":17,"g":"水"},"﨑":{"s":12,"g":"木"}};
+const HIRA={
+  // あ行 (土) - 3画
+  'あ':3,'い':2,'う':2,'え':3,'お':3,
+  // か行 (木) - 3,4画
+  'か':3,'き':4,'く':1,'け':3,'こ':3,
+  // さ行 (金) - 3画
+  'さ':3,'し':1,'す':2,'せ':3,'そ':2,
+  // た行 (火) - 4,2画
+  'た':4,'ち':2,'つ':1,'て':1,'と':2,
+  // な行 (火) - 4,3画
+  'な':4,'に':3,'ぬ':2,'ね':2,'の':1,
+  // は行 (水) - 3,1画
+  'は':3,'ひ':1,'ふ':4,'へ':1,'ほ':4,
+  // ま行 (水) - 3,2画
+  'ま':3,'み':2,'む':3,'め':2,'も':3,
+  // や行 (土)
+  'や':3,'ゆ':2,'よ':2,
+  // ら行 (火)
+  'ら':2,'り':2,'る':1,'れ':2,'ろ':1,
+  // わ行 (土)
+  'わ':2,'ゐ':1,'ゑ':1,'を':3,'ん':1
+};
+const HIRA_G={
+  'あ':'土','い':'土','う':'土','え':'土','お':'土',
+  'か':'木','き':'木','く':'木','け':'木','こ':'木',
+  'さ':'金','し':'金','す':'金','せ':'金','そ':'金',
+  'た':'火','ち':'火','つ':'火','て':'火','と':'火',
+  'な':'火','に':'火','ぬ':'火','ね':'火','の':'火',
+  'は':'水','ひ':'水','ふ':'水','へ':'水','ほ':'水',
+  'ま':'水','み':'水','む':'水','め':'水','も':'水',
+  'や':'土','ゆ':'土','よ':'土',
+  'ら':'火','り':'火','る':'火','れ':'火','ろ':'火',
+  'わ':'土','ゐ':'土','ゑ':'土','を':'土','ん':'土'
+};
+const KATA={
+  // ア行 (土)
+  'ア':2,'イ':2,'ウ':2,'エ':3,'オ':3,
+  // カ行 (木)
+  'カ':2,'キ':3,'ク':2,'ケ':3,'コ':2,
+  // サ行 (金)
+  'サ':3,'シ':3,'ス':2,'セ':2,'ソ':2,
+  // タ行 (火)
+  'タ':3,'チ':3,'ツ':3,'テ':3,'ト':2,
+  // ナ行 (火)
+  'ナ':2,'ニ':2,'ヌ':2,'ネ':4,'ノ':1,
+  // ハ行 (水)
+  'ハ':2,'ヒ':2,'フ':1,'ヘ':1,'ホ':4,
+  // マ行 (水)
+  'マ':2,'ミ':3,'ム':2,'メ':2,'モ':3,
+  // ヤ行 (土)
+  'ヤ':2,'ユ':2,'ヨ':3,
+  // ラ行 (火)
+  'ラ':2,'リ':2,'ル':2,'レ':1,'ロ':3,
+  // ワ行 (土)
+  'ワ':2,'ヲ':2,'ン':2
+};
+const KATA_G={
+  'ア':'土','イ':'土','ウ':'土','エ':'土','オ':'土',
+  'カ':'木','キ':'木','ク':'木','ケ':'木','コ':'木',
+  'サ':'金','シ':'金','ス':'金','セ':'金','ソ':'金',
+  'タ':'火','チ':'火','ツ':'火','テ':'火','ト':'火',
+  'ナ':'火','ニ':'火','ヌ':'火','ネ':'火','ノ':'火',
+  'ハ':'水','ヒ':'水','フ':'水','ヘ':'水','ホ':'水',
+  'マ':'水','ミ':'水','ム':'水','メ':'水','モ':'水',
+  'ヤ':'土','ユ':'土','ヨ':'土',
+  'ラ':'火','リ':'火','ル':'火','レ':'火','ロ':'火',
+  'ワ':'土','ヲ':'土','ン':'土'
+};
+const KK={1:{"m":"○","n":"大元中心数","d":"万物の基元、始まり、伸張の意味を持つ数で最大の吉祥運。富貴、名誉、成功、幸福を得られる。自分の持っている力以上の成功を得ることができる幸運の力を持っている"},2:{"m":"×","n":"不和分裂数","d":"独立、進歩、気力なく、分離、不安、変動、病気、トラブル、紛争など災難の多い凶数。物事が定まらず、分離、不完全となる。常に不安定で困難を伴う。精神的に常に不安定となり、苦労が絶えない"},3:{"m":"○","n":"智恵幸運数","d":"陰陽が合わさり万物が形を成形することができバランスを整えられる吉数。知能明敏、福寿、名誉、行動力が高まり順調に発展し成功を得られる。精神的な安定、生活の安定、恵まれた健康が得られる"},4:{"m":"×","n":"災厄破財数","d":"不運、不幸、中途挫折の暗示。病難、災難が多く家や身を亡ぼす。自立心の力が欠け、精神的に不安定になる。災難、健康面の不安がでやすい。何事も努力しても結果出ず、中途で滅び、困難、気苦労が絶えない"},5:{"m":"○","n":"健全発展数","d":"心身健全、名誉、財産を得て発展。誠実、信用、信頼を得て大成功する。人から尊敬され大いに繁栄する"},6:{"m":"○","n":"好運隆昌数","d":"天徳を受けて才能が開花し、幸福をもたらす。行動力、決断力にも優れ人望、財に恵まれ繁栄する。他に凶数が入っていれば若干運氣が下がり気味になるがおおよそ生涯幸福とみる"},7:{"m":"○","n":"目的達成数","d":"独立心、権威性をもった吉数。自我が強すぎる為、和を欠きやすいが万難を排し成功する力強い吉数である。波乱を克服したあとに、成功、勝利を手に入れる"},8:{"m":"○","n":"意思向上数","d":"意思強固、自ら物事にとりくむ気性に富み、忍耐強く努力して発展し万難を排し大きな成功をおさめる。ただし、他の運との兼ね合いで衝突の意味も含まれていることから大きな危険が生じる場合がある"},9:{"m":"×","n":"変転凶運数","d":"災難、失敗、不遇、孤独、逆境、薄命、病難、災害などのあらゆる悲運の暗示。他の運のバランスによりまれに吉運になる場合もあるが、ほとんどが病難、災難にあいやすい。物事がうまくいかず、たとえうまくいっても一時的で終わる"},10:{"m":"×","n":"失敗破滅数","d":"倒産、失職、孤独、離別などの不幸を生じやすい。事故、災難、波乱、病難、悲運、中途挫折、障害多い。9よりももっと凶意がある大凶数である。物事が全て無しの状態になる。気力を失い災難にまきこまれ家族との離別、病難にもあいやすい"},11:{"m":"○","n":"順運繁栄数","d":"順調の発展、温和、篤実。一家子孫繁栄する。困難を乗り越えて、周りからの信頼を得て思い通りに何事も発展する吉数"},12:{"m":"×","n":"薄弱散財数","d":"薄弱、無力で無理をして中途挫折、失敗を繰り返す。自分の力以上のことをして結果が伴わず無駄な努力に終わる"},13:{"m":"○","n":"知能発達数","d":"知能明晰、学芸技術、才能に富む、感受性豊か、困難を乗りこえ発展する。決断力や行動力もあり財と名誉を得ることができる。家庭的にも幸福を得られる"},14:{"m":"×","n":"孤独破乱数","d":"家族縁が薄く、友人間の不和もあり孤独、精神的苦労。逆境に兆し、破壊分裂、遭難、何事も成果がでない。浮き沈みが激しく苦労が多く健康を損なうこともある"},15:{"m":"○","n":"健全大吉数","d":"福寿円満、上からの引き立てがあり成功する。社会的にも家庭的にも何事も順調に進み成功する"},16:{"m":"○","n":"転禍為福数","d":"凶を吉に転じる強い力をもつ、頭領運があり人の上にたって栄える。周囲の信頼が厚く成功をおさめる。富や名誉、家庭の幸福も得られる"},17:{"m":"○","n":"強運発達数","d":"意思強固、万難を乗り越えて成功する。意思強固すぎると不和や反発を招き挫折失敗する恐れあり。女性がこの数をもつと強すぎて男性的になりやすい"},18:{"m":"○","n":"智謀向上数","d":"智謀あり発展する、意思強固、新念を貫いて成功する。意思強固すぎた場合、不和となり失敗困難に陥ることがある。他の数の兼ね合いで失敗や困難になる場合あり"},19:{"m":"×","n":"困難障害数","d":"障害多難、病弱、不和、孤独、波乱、中途挫折。知性と行動力に優れまれに成功するが不意の障害、困難、不和により失敗する。他に吉数がない場合、病難、家族縁薄く、さまざまな不幸に見舞われる"},20:{"m":"×","n":"厄難大経数","d":"分離、分裂、全て失敗に終わる、崩壊を意味する最凶数。家族との生・死別や自分にとっての災難、破滅、病難にもあいやすい。短命、主運にある場合は更に凶意が強まるので要注意"},21:{"m":"○","n":"独立頭領数","d":"偉大な頭領運。尊敬、権威、財、名誉、富貴の暗示の大吉数。女性は後家運。独立し仕事をもっている女性にはいいが、女性がもつには強すぎて家庭崩壊、病気、夫の運をだめにする凶の数でもある"},22:{"m":"×","n":"中途挫折運","d":"薄弱、不平、逆境、孤独、中途挫折、困難、病気、無気力、災難。何事も思うようにいかず、挫折し不平不満を抱き無気力になることがある。器用貧乏"},23:{"m":"○","n":"知能頭領数","d":"運氣旺盛にて一代で成功する大吉数。人の上に立ち困難を乗り越え地位と財産を得る。女性にとっては凶で家庭崩壊や、孤独を招く"},24:{"m":"○","n":"才能実力数","d":"知力あり、資財豊厚、吉慶あり、子孫繁栄。無から有を生み出す力が強く大成功し繁栄する吉運。金銭的に恵まれ貯まる。晩年より一層繁栄する"},25:{"m":"○","n":"成功開発数","d":"鋭い感覚と優れた才能に恵まれる。偏屈的なところがある為事業などに支障がでる場合があるが、周囲への気づかいや振る舞いを心がけることで才能開花、願望達成し幸福を得て豊かになる"},26:{"m":"×","n":"波乱変化数","d":"変動の人生、波乱万丈、吉凶極端だが凶の作用がほとんどとなる。稀に困難を乗り越え大成功するが、力が足りない場合は困難に陥り家や財産を失うなど一生安定しない。他運の組み合わせによっては家族の不幸、孤独となる"},27:{"m":"×","n":"不和浮沈数","d":"運命の曲折が多く努力しても不和、不成功となる。批難運といわれる凶数。自我が強く誹謗中傷をうけ中途挫折、失敗が多い。他運の関係により、孤独、家族との縁が薄い、災難にあいやすい"},28:{"m":"×","n":"苦労不安数","d":"猪突猛進で自己過信をしすぎて非難攻撃をうけやすい。遭難、病難、波乱、変動、一生苦労が多い、配偶者との生別や死別。人の意見を聞かず、もめごとが多く非難や悪口をいわれる。人間関係がうまくいかずトラブルや災難、事件にまきこまれやすい。女性は孤独な人生になる"},29:{"m":"△","n":"活動智謀数","d":"智謀に秀でて活動的で優れた功績を上げ大業を成し遂げる。しかし、自己過信によって運氣の伸縮を妨げる恐れあり"},30:{"m":"△","n":"吉凶相半数","d":"不平不満が多く次々と失敗する。女性にとっては更に凶となり家庭運、結婚、社会的にも活躍できない恐れあり。浮沈多く吉凶が半々。成功、失敗の落差が激しく一時的に成功するも調子によって失う傾向がある。病難や家族縁が薄く苦労が多い"},31:{"m":"○","n":"健全幸運数","d":"意志賢固で苦難を乗り越え確実に進み大業を成し遂げる。大勢の人から信頼され、名誉、財産を得て幸福一生安泰になる"},32:{"m":"○","n":"人気財運数","d":"思いがけない幸運に恵まれる多幸多望の運。目上の人の引き立てにより成功する。多くの人から愛される徳を持ち、人脈、財産、家族に恵まれ幸福を得る"},33:{"m":"○","n":"知力剛気数","d":"隆昌盛大の発達運、権威、智謀、決断力、剛毅。大いに発展し名声を世間に轟かす。非常に旺盛な運氣の為ことを誤ると失敗も大きいため自己過信に注意。女性には凶相。夫との離別多い"},34:{"m":"×","n":"不運受難数","d":"破壊、波乱、困難、障害、滅亡の意。短命の暗示。大凶数。破壊波乱の意が強く築き上げたもの全て失う恐れあり。一旦凶がくると次々と凶がきて大凶となる"},35:{"m":"○","n":"円満発展数","d":"何事も思うようにいかず、困難に陥る。知性や感性が優れ特に文芸に秀でた才能をもつ。他の吉数の作用によっては統率力、実行力が備わり指導者として実力を発揮する。女性には仕事も家庭も安定的に順調いく大吉数である"},36:{"m":"×","n":"義侠変化数","d":"浮き沈みが激しく苦労が多い。常に、苦労困難が絶えず一生安泰しづらい。動けば動くほどに大きな問題を生じ困難に陥って衰退する。他運との兼ね合いで病難、孤独、家族縁が薄くなるなどの凶が働く"},37:{"m":"○","n":"富栄大吉数","d":"誠実で努力し目標に向かって忠実に行動し優れた功績を出す。周囲の信頼を得て、困難も乗り越え才能発揮し大業を達成する。富と幸福を得る。独立心が強く孤立しがち。穏和、平静を心がけるとより発展する"},38:{"m":"○","n":"知能技能数","d":"温厚真面目、学問技芸文化面で名声をあげることが可能。ただし、指導力、統率力、リーダーとしての資質に欠け信頼は得られず目的を達成することや富は得られない。意志弱く無気力。文学、技能面において才能発揮の吉とみる。三才配列が吉の場合凶意が抑えられて吉運となる"},39:{"m":"△","n":"福徳発達数","d":"災いを幸福に変える。権威を高め長寿、財産に恵まれ子孫の代まで栄える。吉凶紙一重の運で逆転させることもある。女性にとっては凶。結婚運がなく、結婚しても別離、孤独に陥る"},40:{"m":"×","n":"変転逆運数","d":"智謀、才能あるが周囲との不和が多い。浮き沈みが激しく動く程失敗を引き起こす。動けば困難を生じ、退くことで平穏となる。ギャンブルなど投機的なもので成功する傾向があるが続かない"},41:{"m":"○","n":"健全成功数","d":"独立心、実行力があり誠実で穏やかで多くの人からの信頼を得る。着実に大業を成し遂げ名声共に富栄える吉数"},42:{"m":"△","n":"中運技能数","d":"多芸多才だが散漫で失敗しやすい。多方面に広げすぎるあまり広く浅くなり一芸に秀でることができない。意志薄弱で思うようにことがすすまない。孤独、病弱に陥ることもある"},43:{"m":"×","n":"逆境散財数","d":"智謀に富み才能も恵まれているが意志薄弱で実行できず成果があがらない。浪費の多い散財運で異性関係で身を亡ぼすことがある。幸福そうに見えて苦労が多い"},44:{"m":"×","n":"破滅凶運数","d":"失意、逆境、苦労が多い、病難、家族の別離。破産、孤独、精神的な病、短命の暗示あり。何事もうまくいかない"},45:{"m":"○","n":"隆昌盛運数","d":"極まれに英雄、大政治家、偉人を生む数である。万難を突破し成功し繁栄して富を得る。どんな困難も乗り越えて大業を成し遂げる"},46:{"m":"×","n":"変怪悲哀数","d":"薄弱、困難、失敗、病難、波乱。稀に成功者が生まれる。吉凶の差が激しい。病難、孤独に陥るなど不幸が多い。苦労、失敗が続いて突然窮地に陥いる波乱の凶数"},47:{"m":"○","n":"福徳儒吉数","d":"開花幸福。事業盛運発達の好運。人から協力を得て成功する。努力が実を結び長く子孫に幸福をもたらす"},48:{"m":"○","n":"人望知能数","d":"知恵と才能を活かして成功に導く。地位財産に恵まれる。周囲から信頼と尊敬を集める"},49:{"m":"×","n":"不運悲運数","d":"吉凶相半で吉がくると大吉を招くが、凶がくると大凶となり落差が激しく不安定。他運、三才配列により運が変わる。調和がとれていればいいが不調和の場合は大凶になる"},50:{"m":"×","n":"波乱弱運数","d":"一成一敗、波乱が多い。吉凶は相半ば。一時は好調に進み大成功するが破壊、急落し障害にあい挫折失敗する。晩年は地位、財産を失うような大きな失敗の暗示あり。他運に凶がある場合一家離散や大きな災難を引き起こす"},51:{"m":"△","n":"進歩中吉数","d":"一盛一衰あり、一時成功し名誉と財産を得るが長く続かず失敗を引き起こす。晩年浮き沈みが激しく苦労が増える。他運の吉の作用により吉に転ずる場合もある"},52:{"m":"○","n":"勢威強運数","d":"先見の明を持ち成功し財産と名声、富を得る。困難があっても努力し、目標を確実に達成する"},53:{"m":"△","n":"流転不安数","d":"幸福そうに見えるが苦労、災難が多い。吉凶半々。一生を通じて浮き沈みが激しい。主運、副運がともに吉数で三才が吉ならば吉運になることもある"},54:{"m":"×","n":"離散孤独数","d":"不和、損失、困難、苦労が絶えない。短命の暗示あり。人間関係がうまくいかず損失、破産、多くの困難が起き、病難や家族との別離など苦労が絶えない。前半好調であっても後半が崩壊となりやすい"},55:{"m":"△","n":"知性発達数","d":"知的発達運、意思強く努力して大成する。どんな困難でも乗り越えれば成功の望みがある吉凶半々の運。三才配列が吉であれば吉運になる"},56:{"m":"×","n":"流転薄弱数","d":"実行力に乏しい。損失災厄が続き晩年衰退する。何をするにも気力なく他人と意見が合わず衝突しうまくいかない"},57:{"m":"○","n":"天徳吉祥数","d":"意志強固と不屈の精神をもち幸福がもたらされ富を得て繁栄する。晩年にむかって名実ともに繁栄する"},58:{"m":"△","n":"努力末吉数","d":"浮沈が多い。大失敗や大災難のあとでなければ成功しない。晩年は幸福を得られる"},59:{"m":"×","n":"薄幸苦労数","d":"忍耐、気力、勇気なく、損失、失意、逆境に陥り苦労が多い。さまざまな災難にあい災難、逆境など一生苦労が多い"},60:{"m":"△","n":"波乱凶兆数","d":"動揺、不安、失敗、苦悩が多い。常に悩まされ心が休まらない。人生の目的が定まらず無謀な企てを起こし失敗しどん底に陥る。病難がひきおこされる暗示あり"},61:{"m":"○","n":"名利繁栄数","d":"優れた才能と勇気、名誉、財産を得られて繁栄する。ただし、謙虚に欠けたり、傲慢になると対人関係で問題が起きトラブルが絶えないという心配がある。穏やかで親切心を忘れず行動すれば一生を幸福に過ごせる。三才配列に吉があれば大吉運に変わる"},62:{"m":"×","n":"災厄衰運数","d":"争いごと多く信用に乏しく思った通りに事が進まず衰退する。晩年辛く困難が多くなる"},63:{"m":"○","n":"安泰好運数","d":"目的達成、子孫繁栄。障害なく思い通りに進み発展し願望成就する。富を子孫にまで受け継がせることができる"},64:{"m":"×","n":"破滅困苦数","d":"波乱滅亡、病難、災難、苦労。浮沈が激しく物事が途中で挫折したり、失敗し、破滅へ向かう。一家離散、想定外の災難、重病など生涯安心を得られない"},65:{"m":"○","n":"公正隆昌数","d":"富貴、栄達と健康、長寿。全て思い通りに事が運び発展し、社会的な成功と家庭安泰、幸福を得る。幸福が子孫に受け継がれる"},66:{"m":"×","n":"衰運苦悩数","d":"衰退の自由を失い争いや困難が多い。何をやっても障害が起こり失敗し苦労が絶えない。トラブル、損害、災難が次々に起こり自分だけでなく家族まで不幸になる"},67:{"m":"○","n":"安定伸長数","d":"上からの引き立てで何事も支障なく志望を成就する。財産を築き、名誉を得て、下からは慕われ出世し、家は繁栄する"},68:{"m":"○","n":"知徳名利数","d":"勤勉、努力により大きな成果を上げ発展する。意志強固で発明工夫の才能があり成功し発展する。周囲の信頼と尊敬を得て名誉財産を得る"},69:{"m":"×","n":"非業敗退数","d":"困難、障害、無気力、不安定、病難、経済的困窮。病気、災難に次々と見舞われ不安におびえる不運な暗示をもつ"},70:{"m":"×","n":"散財悲哀数","d":"孤独、別離、病難、貧苦、険しい人生、滅亡、など不運が続く。一生悲惨な生活になる暗示。悲しみ、苦しみ、心の痛みが多い。病気やけがなどの難を受け、悲惨な運命となる"},71:{"m":"△","n":"堅実漸進数","d":"実行力と堅実性をもつ。平穏無事。財産を得て繁栄をするはずの吉運だが、実は苦労が多く失敗するなど吉凶が半々となる。三才の配置で吉の場合好運となる"},72:{"m":"×","n":"名実矛盾数","d":"外見は吉、内実凶の吉凶半々。無力、消極のため無理をして失敗すると自分で再起が難しい。晩年は病気、災難に見舞われる"},73:{"m":"△","n":"停滞無難数","d":"実行力に乏しい。理想ばかり高く事は成就しない。最後までやり抜く力がなく何事も成就しがたい。自然の幸福を得る運が強く後半は平安に暮らせる。三才の配置が吉であれば吉運となる"},74:{"m":"×","n":"無能不遇数","d":"無気力、無能の暗示。無気力でやる気がなく世の中から必要とされない境遇に陥りやすい。予想外の災難や困難にあい逆境に苦しむ"},75:{"m":"○","n":"努力発展数","d":"努力発展運。行動力があり困難を突破する。自然と裕福になり繁栄する"},76:{"m":"×","n":"不和薄縁数","d":"破綻、不調、破滅、一家離散、病難。内外共に災難やトラブルが次々と起きる"},77:{"m":"△","n":"前苦後楽数","d":"上位の引き立てがあり幸福となるが、次第に不幸となる。もし前半が苦労の多い凶運の場合、後半は幸福となる"},78:{"m":"△","n":"和順末吉数","d":"知能があり順調に成功するが晩年衰退し困難苦労が多くなる。吉凶半々だが凶がやや強い。三才の組み合わせで吉運を保てる"},79:{"m":"×","n":"背信逆難数","d":"情緒不安定で無気力。意志薄弱、実行力も乏しい。信用を失い批難、攻撃を受ける。浮沈が激しい。苦労災難が絶えない。病気がちで犯罪に巻き込まれる危険がある。孤独に陥りやすい"},80:{"m":"×","n":"障害困苦数","d":"浮沈が激しい苦労災難が絶えない"},81:{"m":"○","n":"基極吉祥数","d":"終極の数にして基数1と同様の吉祥になる"}};
+
+/* ── パスワード認証 ── */
+(function(){
+  const PW='888';
+  const KEY='seimei_pw_date';
+  let _sessionUnlocked=false;
+  function todayStr(){
+    const d=new Date();
+    return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  }
+  function isUnlocked(){
+    if(_sessionUnlocked)return true;
+    try{return localStorage.getItem(KEY)===todayStr();}catch(e){return false;}
+  }
+  function unlock(){
+    _sessionUnlocked=true;
+    try{localStorage.setItem(KEY,todayStr());}catch(e){}
+    document.getElementById('pw-screen').style.display='none';
+  }
+  window.checkPW=function(){
+    const v=document.getElementById('pw-input').value;
+    if(v===PW){unlock();}
+    else{
+      const e=document.getElementById('pw-err');
+      e.textContent='パスワードが違います';
+      document.getElementById('pw-input').value='';
+      document.getElementById('pw-input').focus();
+      setTimeout(()=>{e.textContent='';},2500);
+    }
+  };
+  // ページ読み込み時に認証チェック
+  if(isUnlocked()){
+    document.addEventListener('DOMContentLoaded',function(){
+      document.getElementById('pw-screen').style.display='none';
+    });
+  }
+})();
+const CFG={
+  '1-1':[1,1],'1-2':[1,2],'2-1':[2,1],
+  '2-2':[2,2],'3-1':[3,1],'1-3':[1,3],
+  '2-3':[2,3],'3-2':[3,2]
+};
+const LBL={
+  '1-1':'苗字１文字・名前１文字（2文字）',
+  '1-2':'苗字１文字・名前２文字（3文字）','2-1':'苗字２文字・名前１文字（3文字）',
+  '2-2':'苗字２文字・名前２文字（4文字）','3-1':'苗字３文字・名前１文字（4文字）',
+  '1-3':'苗字１文字・名前３文字（4文字）','2-3':'苗字２文字・名前３文字（5文字）',
+  '3-2':'苗字３文字・名前２文字（5文字）'
 };
 
-function getTimeOfDay(){
-  const h=new Date().getHours();
-  if(h>=5&&h<12) return 'morning';
-  if(h>=12&&h<17) return 'afternoon';
-  if(h>=17&&h<22) return 'evening';
-  return 'night';
+/* ── 性別 ── */
+function setGender(g){
+  GENDER=g;
+  document.getElementById('gb-m').className='gb'+(g==='男'?' active-m':'');
+  document.getElementById('gb-f').className='gb'+(g==='女'?' active-f':'');
+  const note={'男':'男性プロフィールで計算します','女':'女性プロフィールで計算します'};
+  document.getElementById('gnote').textContent=note[g]||'';
+  if(CT)updateGbadge();
+}
+function updateGbadge(){
+  const el=document.getElementById('gbadge');
+  if(!GENDER){el.textContent='';return;}
+  el.textContent=GENDER==='男'?'男性':'女性';
+  el.className='gender-badge '+(GENDER==='男'?'gb-m':'gb-f');
 }
 
-function getSpecialTimeMsg(name){
-  const h=new Date().getHours();
-  const m=new Date().getMinutes();
-  const timeVal=h*60+m;
-  
-  const lunchMsgs=[
-    `${name}、もうすぐランチの時間だね。美味しいもの食べてね🍽️`,
-    `${name}、お昼だ！好きなものを食べて、ちょっと気分転換しようね🌸`,
-    `${name}、ランチタイムだよ。栄養をしっかり摂ってね💪`,
-    `${name}、お昼の時間。今日のお弁当、何ですか？美味しく食べてね😋`,
-    `${name}、ランチの時間だ。好きなお店でゆっくりしてね🍙`,
-  ];
-  
-  const snackMsgs=[
-    `${name}、おやつの時間だよ。甘いものでも食べて、ちょっと休憩してみてね🍰`,
-    `${name}、3時だ。コーヒーとお菓子で一息ついてね☕`,
-    `${name}、おやつタイムだ。好きなお菓子食べて、リフレッシュしようね🍪`,
-    `${name}、午後3時。疲れたときは甘いものが一番。好きなお菓子食べてね💕`,
-    `${name}、おやつの時間。ちょっと休憩して、また頑張ろうね🌸`,
-  ];
-  
-  const eveningMsgs=[
-    `${name}、夜の時間だ。今日も一日お疲れ様。ゆっくり過ごしてね🌙`,
-    `${name}、夕方だ。仕事の後は好きなことしてリラックスしようね💆`,
-    `${name}、夜ご飯の時間だ。美味しく食べてね🍜`,
-  ];
-  
-  if(timeVal>=690&&timeVal<=810) return lunchMsgs[Math.floor(Math.random()*lunchMsgs.length)];
-  if(timeVal>=900&&timeVal<=960) return snackMsgs[Math.floor(Math.random()*snackMsgs.length)];
-  if(timeVal>=1020&&timeVal<=1080) return eveningMsgs[Math.floor(Math.random()*eveningMsgs.length)];
-  
-  return null;
+/* ── 画面切替 ── */
+function showTable(t){
+  CT=t;
+  document.getElementById('sscr').style.display='none';
+  const s=document.getElementById('tscr');s.style.display='block';s.classList.add('anim');
+  document.getElementById('tbadge').textContent=LBL[t];
+  updateGbadge();
+  render(t);
+  window.scrollTo({top:0,behavior:'instant'});
 }
-
-function getDayOfWeek(){
-  return new Date().getDay();
-}
-
-function countFilledDays(){
-  let cnt=0;
-  document.querySelectorAll('.day-body.open').forEach(db=>{
-    const plans=db.querySelectorAll('.plan-item textarea.field');
-    const hasContent=Array.from(plans).some(p=>p.value.trim());
-    if(hasContent) cnt++;
+function resetInputs(){
+  if(!CT)return;
+  // 入力フィールドをすべてクリア
+  const [sc,nc]=CFG[CT]; const tot=sc+nc;
+  for(let i=1;i<=tot;i++){
+    const k=document.getElementById('k'+i);if(k)k.value='';
+    const n=document.getElementById('n'+i);if(n)n.value='';
+    const g=document.getElementById('g'+i);if(g){g.value='';applyGC(i);}
+    const nkk=document.getElementById('nkk'+i);if(nkk)nkk.textContent='';
+  }
+  const memo=document.getElementById('memo');if(memo)memo.value='';
+  // 三才パネルリセット
+  ['st','sj','sc'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent='—';e.className='spv';e.style.color='';}});
+  document.getElementById('sp-hantei').textContent='—';
+  document.getElementById('sp-kk').textContent='—';
+  clearKK();
+  // バランス判定リセット
+  ['bl-sansai-kk','bl-sansai-desc','bl-yy-kk','bl-yy-desc','bl-ot-kk','bl-ot-desc','bl-balance-kk'].forEach(id=>{
+    const e=document.getElementById(id);if(e){e.innerHTML='—';e.textContent='—';}
   });
-  return cnt;
+  recalc();
+}
+function goBack(){
+  CT=null;
+  document.getElementById('sscr').style.display='block';
+  document.getElementById('tscr').style.display='none';
+  document.getElementById('ta').innerHTML='';
+  ['st','sj','sc'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent='—';e.className='spv';e.style.color='';}});
+  clearKK();
+  window.scrollTo({top:0,behavior:'instant'});
 }
 
-function getTotalDays(){
-  return document.querySelectorAll('.day-body').length;
+/* ── HTML builders ── */
+function kCell(i){
+  return `<td><div class="kw">
+    <input type="text" id="k${i}" maxlength="1" placeholder="字" oninput="onK(${i})">
+    <span class="sb" id="sb${i}"></span>
+  </div></td>`;
+}
+function gCell(i){
+  return `<td><select class="gs" id="g${i}" onchange="applyGC(${i});recalc()">
+    <option value="">—</option>
+    <option value="木">木</option><option value="火">火</option>
+    <option value="土">土</option><option value="金">金</option><option value="水">水</option>
+  </select></td>`;
+}
+function oCell(i,tot){
+  // 音霊列: i===1 のときだけ rowspan=tot のセルを出力。
+  // 全行の高さにわたる1つのtd内に (tot-1) 個のマスをflex均等配置。
+  // 各マスが「隣り合う行の境界線を中心にまたがる」ように見える。
+  if(i===1){
+    const boxes=Array.from({length:tot-1},(_,k)=>`<div class="ot-box"><span id="ot${k+2}">—</span></div>`).join('');
+    return `<td class="ot-col" rowspan="${tot}" style="padding:0;width:24px;vertical-align:top">
+      <div class="ot-boxes">${boxes}</div>
+    </td>`;
+  }
+  return ''; // rowspan済みのため2行目以降はセルなし
+}
+function yCell(i,tot){
+  // 判定行(最終行)では総格も表示
+  const isFinal=(i===tot+1); // hanteiRowで使う
+  return `<td><span class="yy" id="y${i}">—</span></td>`;
+}
+function nCell(i){
+  return `<td style="padding:1px;text-align:center">
+    <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:1px">
+      <input class="ni" type="number" id="n${i}" min="1" placeholder="画" oninput="onN(${i})" style="display:block">
+      <span id="nkk${i}" style="font-size:.75rem;font-weight:700;line-height:1;display:block"></span>
+    </div>
+  </td>`;
 }
 
-function getGreeting(name,time){
-  const greetings={
-    'early_morning':[
-      `${name}、おはようございます！朝から頑張ってるなんてすごい🌅`,
-      `${name}、おはよう！朝日を浴びながら週報を作るなんて素敵だね☀️`,
-      `${name}、おはようございます。朝の時間を大切にしてる、本当に尊敬しちゃう🌸`,
-      `${name}、おはよう。朝からやることを整理するなんて、計画的だね！`,
-      `${name}、おはようございます。今日も一緒に頑張ろうね🌟`,
-    ],
-    'pre_lunch':[
-      `${name}、まもなくランチタイムだね。あともう一踏ん張り！💪`,
-      `${name}、まもなくランチだ。あと一歩を頑張ろう！🌸`,
-      `${name}、ランチまでもういっちょ。最後の一歩！😋`,
-    ],
-    'lunch':[
-      `${name}、お昼だ！好きなものを食べて、ちょっと気分転換しようね🌸`,
-      `${name}、ランチタイムだよ。栄養をしっかり摂ってね💪`,
-      `${name}、お昼の時間。今日のお弁当、何ですか？美味しく食べてね😋`,
-      `${name}、ランチの時間だ。好きなお店でゆっくりしてね🍙`,
-    ],
-    'afternoon':[
-      `${name}、お疲れ様です。午後も調子いいね💪`,
-      `${name}、こんにちは！昼間から記録をつけるなんて、本当にちゃんとしてる🌸`,
-      `${name}、午後も頑張ってるね。その継続力が素晴らしいよ✨`,
-      `${name}、こんにちは。昼間の時間を大切にしてる姿、素敵だよ💕`,
-      `${name}、お疲れ様です。今日も着実に進んでるね！`,
-    ],
-    'snack':[
-      `${name}、おやつの時間だよ。甘いものでも食べて、ちょっと休憩してみてね🍰`,
-      `${name}、3時だ。コーヒーとお菓子で一息ついてね☕`,
-      `${name}、おやつタイムだ。好きなお菓子食べて、リフレッシュしようね🍪`,
-    ],
-    'late_afternoon':[
-      `${name}、夕方だ。今日を振り返ってみてね🌸`,
-      `${name}、お疲れ様です。今日も着実に進んでるね！`,
-    ],
-    'evening':[
-      `${name}、お疲れ様です。一日の終わりに振り返るなんて、本当に素敵🌙`,
-      `${name}、夜の時間を大切にしてるんだね。その姿勢、大好きだよ🌸`,
-      `${name}、お疲れ様です。夜に記録をつけるなんて、真面目だなあ💕`,
-      `${name}、お疲れ様です。今日も一日お疲れ。ゆっくり振り返ろうね✨`,
-      `${name}、夜のお疲れ様です。一日の成果を記録してくれてありがとう🌟`,
-    ],
-    'night':[
-      `${name}、夜遅くまで頑張ってるなんてすごい！でも無理しすぎないでね🌙`,
-      `${name}、こんな遅い時間に作業してるなんて、本気度が伝わってくるよ💪`,
-      `${name}、深夜の作業、お疲れ様です。その情熱、絶対に実を結ぶよ✨`,
-      `${name}、遅い時間までお疲れ様。でも体も大事にしてね🌸`,
-      `${name}、夜中まで頑張ってる。その努力は絶対に誰かの心に届いてるよ🌟`,
-    ]
-  };
-  return greetings[time]?greetings[time][Math.floor(Math.random()*greetings[time].length)]:`${name}、今日も一緒に頑張ろうね🌸`;
+function tRow(i,cls,lbl,tot,...extra){
+  // 列順: 名前|文字|五行|音霊(rowspan, i=1のみ)|陰陽|画数|格
+  const otPart=(i===1)?oCell(1,tot):'';
+  return `<tr class="${cls}"><td class="cn">${lbl}</td>${kCell(i)}${gCell(i)}${otPart}<td><span class="yy" id="y${i}">—</span></td>${nCell(i)}${extra.join('')}</tr>`;
 }
 
-function getProgressMsg(name,filled,total){
-  if(filled===total){
-    return [
-      `${name}、全部書けたね！すごい！1週間全部記録できたなんて最高だよ🎉`,
-      `${name}、全日程の記録が完成！その継続力、本当に尊敬するよ✨`,
-      `${name}、1週間全部書き終わった！完璧だね💯`,
-      `${name}、全部書けちゃった。その集中力と継続力、本当にすごい！🌟`,
-    ];
-  }
-  const remaining=total-filled;
-  if(remaining===1){
-    return [
-      `${name}、あと1日だよ。ラストスパート、ファイト💪`,
-      `${name}、あと1日で完成！もう少しだね🎯`,
-      `${name}、あと1日。最後の一日も一緒に頑張ろう🌸`,
-    ];
-  }
-  if(remaining===2){
-    return [
-      `${name}、あと2日だよ。ファイト💪`,
-      `${name}、あと2日で完成！その調子で行こう🎯`,
-      `${name}、あと2日。もう少しだね、頑張ろう🌸`,
-    ];
-  }
-  if(remaining===3){
-    return [
-      `${name}、あと3日。半分以上書けたね、その調子！`,
-      `${name}、あと3日。ペースいいね、このまま行こう🎯`,
-    ];
-  }
-  if(filled>0){
-    return [
-      `${name}、${filled}日分書けたね。その調子で続けようね💪`,
-      `${name}、${filled}日分の記録、お疲れ様。あと${remaining}日、一緒に頑張ろう🌸`,
-    ];
-  }
-  return [`${name}、さあ、一緒に週報を作ろう！まずは1日目からだね🌸`];
+function kakuBoxes(rs){
+  return `<td class="kaku-col" rowspan="${rs}">
+    <div class="kaku-boxes">
+      <div class="kb kb-ten"><span class="kb-l">天</span><span class="kb-sp"> </span><span class="kb-v" id="v-ten">—</span><span class="kb-sp"> </span><span class="kb-ht" id="ht-ten">—</span></div>
+      <div class="kb kb-jin"><span class="kb-l">人</span><span class="kb-sp"> </span><span class="kb-v" id="v-jin">—</span><span class="kb-sp"> </span><span class="kb-ht" id="ht-jin">—</span></div>
+      <div class="kb kb-chi"><span class="kb-l">地</span><span class="kb-sp"> </span><span class="kb-v" id="v-chi">—</span><span class="kb-sp"> </span><span class="kb-ht" id="ht-chi">—</span></div>
+      <div class="kb kb-gai"><span class="kb-l">外</span><span class="kb-sp"> </span><span class="kb-v" id="v-gai">—</span><span class="kb-sp"> </span><span class="kb-ht" id="ht-gai">—</span></div>
+    </div>
+  </td>`;
 }
 
-function getSpecialMsg(name,dayOfWeek){
-  if(dayOfWeek===1){
-    return [
-      `${name}、今日は提出日だよ。1週間の成果を見せる時だね🎯`,
-      `${name}、月曜日。提出日だよ。頑張った成果を出そうね💪`,
-      `${name}、今日は提出日。1週間の頑張りが形になる日だね✨`,
-    ];
+/* 判定行（音霊=音霊列、陰陽=陰陽列、総格=画数列） */
+function hanteiRow(tot){
+  return `<tr class="hantei-row">
+    <td class="cn" style="color:var(--ink-s);font-size:1.05rem;font-family:'Noto Serif JP',serif;font-weight:500">判定</td>
+    <td></td><td></td>
+    <td style="text-align:center"><span id="ot-hantei" style="font-size:1.05rem;font-weight:700;font-family:'Noto Serif JP',serif">—</span></td>
+    <td style="text-align:center"><span id="yy-hantei" style="font-size:1.05rem;font-weight:700;font-family:'Noto Serif JP',serif">—</span></td>
+    <td style="text-align:center;padding:1px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+        <span style="font-size:12px;color:var(--ink);font-family:'Noto Serif JP',serif;letter-spacing:.01em;font-weight:500">総格</span>
+        <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:1px">
+          <span id="v-so" style="font-family:'Noto Serif JP',serif;font-size:1.2rem;font-weight:700;color:var(--ink);line-height:1.2">—</span>
+          <span id="nkk-so" style="font-size:.75rem;font-weight:700;line-height:1;display:block"></span>
+        </div>
+      </div>
+    </td>
+    <td></td>
+  </tr>`;
+}
+
+function buildRows(t){
+  const [sc,nc]=CFG[t]; const tot=sc+nc;
+  const sN=['苗字①','苗字②','苗字③'];
+  const nN=['名前①','名前②','名前③'];
+  let rows='';
+  for(let i=0;i<sc;i++){
+    const extra=(i===0)?[kakuBoxes(tot)]:[];
+    rows+=tRow(i+1,'rs',sN[i],tot,...extra);
   }
-  if(dayOfWeek===0){
-    return [
-      `${name}、明日は提出日だよ。最後の調整、頑張ろうね🌙`,
-      `${name}、日曜日。明日は提出日。最後の確認をしようね📝`,
-      `${name}、明日が提出日。今日中に仕上げちゃおう🎯`,
-    ];
+  for(let i=0;i<nc;i++){
+    rows+=tRow(sc+i+1,'rn',nN[i],tot);
   }
+  rows+=hanteiRow(tot);
+  return rows;
+}
+
+function render(t){
+  document.getElementById('ta').innerHTML=`
+  <table style="table-layout:fixed;width:100%">
+    <colgroup>
+      <col style="width:34px">
+      <col style="width:42px">
+      <col style="width:40px">
+      <col style="width:26px">
+      <col style="width:26px">
+      <col style="width:34px">
+      <col style="width:60px">
+    </colgroup>
+    <thead><tr>
+      <th style="text-align:center;padding-left:0">名前</th>
+      <th>文字</th><th>五行</th><th>音霊</th><th>陰陽</th><th>画数</th>
+      <th>天人地外</th>
+    </tr></thead>
+    <tbody>${buildRows(t)}</tbody>
+  </table>`;
+  // 音霊マスの高さを行の高さに基づいて設定
+  requestAnimationFrame(()=>layoutOtodama(t));
+}
+
+/* 音霊マスのレイアウト: 各行の高さを計測して各マスに設定 */
+function layoutOtodama(t){
+  const [sc,nc]=CFG[t]; const tot=sc+nc;
+  const rows=[];
+  for(let i=1;i<=tot;i++){
+    const k=document.getElementById('k'+i);
+    if(k){const tr=k.closest('tr');if(tr)rows.push(tr);}
+  }
+  if(rows.length===0)return;
+  const otBoxes=document.querySelectorAll('.ot-box');
+  if(otBoxes.length===0)return;
+  // 各マス i の高さ = rows[i].height/2 + rows[i+1].height/2
+  for(let i=0;i<tot-1;i++){
+    const h1=rows[i].getBoundingClientRect().height;
+    const h2=rows[i+1].getBoundingClientRect().height;
+    const h=Math.round(h1/2+h2/2);
+    if(otBoxes[i])otBoxes[i].style.height=h+'px';
+  }
+}
+
+/* ── イベント ── */
+// 濁点・半濁点対応テーブル
+const DAKUTEN_MAP={
+  'が':'か','ぎ':'き','ぐ':'く','げ':'け','ご':'こ',
+  'ざ':'さ','じ':'し','ず':'す','ぜ':'せ','ぞ':'そ',
+  'だ':'た','ぢ':'ち','づ':'つ','で':'て','ど':'と',
+  'ば':'は','び':'ひ','ぶ':'ふ','べ':'へ','ぼ':'ほ',
+  'ガ':'カ','ギ':'キ','グ':'ク','ゲ':'ケ','ゴ':'コ',
+  'ザ':'サ','ジ':'シ','ズ':'ス','ゼ':'セ','ゾ':'ソ',
+  'ダ':'タ','ヂ':'チ','ヅ':'ツ','デ':'テ','ド':'ト',
+  'バ':'ハ','ビ':'ヒ','ブ':'フ','ベ':'ヘ','ボ':'ホ',
+};
+const HANDAKU_MAP={
+  'ぱ':'は','ぴ':'ひ','ぷ':'ふ','ぺ':'へ','ぽ':'ほ',
+  'パ':'ハ','ピ':'ヒ','プ':'フ','ペ':'ヘ','ポ':'ホ',
+};
+function lookupChar(ch){
+  if(!ch)return null;
+  if(KDB[ch])return KDB[ch];
+  // 濁点 (+2)
+  if(DAKUTEN_MAP[ch]){
+    const base=DAKUTEN_MAP[ch];
+    const bs=HIRA[base]!==undefined?HIRA[base]:(KATA[base]!==undefined?KATA[base]:0);
+    const bg=HIRA_G[base]||KATA_G[base]||'';
+    return{s:bs+2,g:bg};
+  }
+  // 半濁点 (+1)
+  if(HANDAKU_MAP[ch]){
+    const base=HANDAKU_MAP[ch];
+    const bs=HIRA[base]!==undefined?HIRA[base]:(KATA[base]!==undefined?KATA[base]:0);
+    const bg=HIRA_G[base]||KATA_G[base]||'';
+    return{s:bs+1,g:bg};
+  }
+  // ひらがな
+  if(HIRA[ch]!==undefined)return{s:HIRA[ch],g:HIRA_G[ch]||''};
+  // カタカナ
+  if(KATA[ch]!==undefined)return{s:KATA[ch],g:KATA_G[ch]||''};
   return null;
 }
 
-function getCompletionMsg(name){
-  return [
-    `${name}、提出できて素晴らしいよ。その行動力、本当に素敵だね✨`,
-    `${name}、週報を提出できた。その成果は絶対に形になるよ🎉`,
-    `${name}、完璧に提出できたね。その継続力と行動力、本当に尊敬するよ💕`,
-    `${name}、提出完了。素晴らしい。また一週間、一緒に頑張ろうね🌸`,
-    `${name}、提出できて素晴らしい。成果につながるよ。また一週間ファイト💪`,
-    `${name}、週報の提出、お疲れ様でした。その努力は絶対に実を結ぶ🌟`,
-    `${name}、完璧に提出できたね。次の週も一緒に頑張ろう。応援してるよ🌺`,
-    `${name}が週報を続けてくれてること、本当に嬉しいよ。絶対に形になるから！✨`,
-    `${name}、提出したね！その行動力、本当にかっこいいよ💫`,
-  ];
+function onK(i){
+  const ch=document.getElementById('k'+i).value;
+  const ne=document.getElementById('n'+i);
+  const ge=document.getElementById('g'+i);
+  const sb=document.getElementById('sb'+i);
+  const info=lookupChar(ch);
+  if(ch&&info){
+    ne.value=info.s;
+    if(info.g)ge.value=info.g;
+    sb.textContent='';
+  }else if(!ch){ne.value='';sb.textContent='';}
+  else{sb.textContent='';}
+  applyGC(i);recalc();
 }
-
-function generateAiriMsg(name){
-  const time=getTimeOfDay();
-  const dow=getDayOfWeek();
-  const filled=countFilledDays();
-  const total=getTotalDays();
-  
-  let special=getSpecialMsg(name,dow);
-  if(special) return special[Math.floor(Math.random()*special.length)];
-  
-  let specialTime=getSpecialTimeMsg(name);
-  if(specialTime&&Math.random()<0.4) return specialTime;
-  
-  if(total>0){
-    const prog=getProgressMsg(name,filled,total);
-    if(Math.random()<0.5) return prog[Math.floor(Math.random()*prog.length)];
-  }
-  
-  return getGreeting(name,time);
+function onN(i){
+  recalc();
 }
-
-function jobPraise(j,name){
-  if(!j||j==='お仕事') return `${name}、今日も一歩ずつ進んでいこうね！わたしが応援してるよ🌸`;
-  const jl=j.toLowerCase();
-  const specialized=[
-    {keys:['sns','インスタ','マーケ','twitter','x','tiktok','発信','スレッズ','facebook','ライン','line'],msgs:[
-      `${name}のSNSでの発信、きっと誰かの心に届いてるよ✨`,
-      `${name}のマーケティング視点、本当に鋭くて尊敬しちゃう！`,
-      `${name}の発信力、時代を読んだ最強の武器だよ🌸`,
-      `${name}の投稿を見た人、絶対に元気もらってるよ。本当にすごい！💕`,
-      `${name}が発信してることで世界が少し明るくなってるよ。気づいてる？🌟`,
-      `${name}がSNSを仕事にしてる、そのセンスと行動力が本当にすごい！✨`,
-      `${name}の発信力、見てるとこっちまでワクワクしてくる！💫`
-    ]},
-    {keys:['デザイン','制作','クリエイティブ','画像','動画','イラスト','アート','写真'],msgs:[
-      `${name}の作るものは、いつも世界を彩ってるね🎨`,
-      `${name}のセンス、本当に素敵！自信持っていいよ✨`,
-      `${name}の作品を見るたびに、すごいなって思う。天才だよ！🌸`,
-      `${name}がクリエイターとして活躍してくれてること、世の中にとって本当に価値があるよ💕`,
-      `${name}の表現力って唯一無二。真似できる人いないよ！🌟`
-    ]},
-    {keys:['コーチ','コンサル','カウンセラ','教える','講師','セミナ','講座'],msgs:[
-      `${name}に導いてもらえる人は、本当に幸せ者だね🍀`,
-      `${name}の言葉には、人を動かす力があるよ！`,
-      `${name}のセッションを受けた人、絶対に前より自分のこと好きになってるよ🌸`,
-      `${name}が人の可能性を引き出してる、その仕事の価値は計り知れないよ！✨`,
-      `${name}が関わった人の数だけ、世の中が良くなってる。そういう仕事してるんだよ💕`
-    ]},
-    {keys:['片付','整理','収納','断捨','ミニマ'],msgs:[
-      `${name}って、空間を整えることで人の心まで軽くできる人なんだよ。すごい才能！✨`,
-      `整理することで人生が変わるって本当のこと。${name}はその力を持ってる人だよ🌸`,
-      `${name}の仕事って、モノだけじゃなく心もきれいにしてあげてるんだよね💕`,
-      `${name}が空間と心を同時に整えてあげられる、その力は本当に特別だよ！🌟`
-    ]},
-    {keys:['ネイ','美容','エステ','まつ','メイク','ヘア','サロン'],msgs:[
-      `${name}の施術を受けた人、絶対に笑顔で帰るよね。最高の仕事だよ！🌸`,
-      `${name}の手にかかったら、みんな自分のこと好きになるんだよ。すごい才能だよ💕`,
-      `${name}のセンスって、流行を作る側の人だよ。その自信、もっと表に出していこう！✨`,
-      `${name}に会いに来るお客さんって、癒しも一緒に求めてくるよね。そういう存在なんだよ！🌟`
-    ]},
-    {keys:['料理','フード','栄養','シェフ','カフェ','食'],msgs:[
-      `${name}の作る料理って、食べた人の心まで満たすよ。最高の魔法！🌸`,
-      `食を通じて人を幸せにできる${name}って、本当に素晴らしい存在だよ✨`,
-      `${name}の料理には愛情がこもってるって、食べた瞬間にわかるよ💕`
-    ]},
-    {keys:['ヨガ','フィット','トレーナ','スポーツ','健康','ピラテ'],msgs:[
-      `${name}のレッスン受けると、体だけじゃなくて心まで整うって本当だよ！🌸`,
-      `健康な体を作るのを手伝える${name}って、人の人生を変えてる！🌟`,
-      `${name}のポジティブなエネルギー、受け取るだけで元気になれるよ！💕`
-    ]},
-    {keys:['不動産','住まい','建築','インテリア'],msgs:[
-      `${name}って、人の人生で一番大きな買い物をサポートしてるんだよ。すごい信頼される仕事！🌸`,
-      `住む場所で人生変わるって本当のこと。${name}はその大切な仕事をしてる！✨`
-    ]},
-    {keys:['税理','会計','弁護','行政','社労','fp','ファイナンシャル'],msgs:[
-      `${name}みたいな専門家がついてくれると本当に心強い。信頼でき続けるってすごいことだよ！🌸`,
-      `${name}の専門知識で救われた人、数え切れないくらいいると思う！✨`,
-      `${name}の仕事って、人の大切なものを守る仕事だよ。誇りを持っていいよ！💕`
-    ]},
-    {keys:['起業','経営','ビジネ','ブランド','集客'],msgs:[
-      `${name}のビジネスセンス、本当に鋭い。市場の流れを読む目が違うよ！🌸`,
-      `${name}の挑戦する姿勢、周りの人に勇気を与えてるよ。気づいてる？💕`,
-      `${name}が自分でビジネスを作り続けてる、その決断力と行動力に尊敬しかない！✨`
-    ]},
-  ];
-  for(const sp of specialized){
-    if(sp.keys.some(k=>jl.includes(k))) return sp.msgs[Math.floor(Math.random()*sp.msgs.length)];
-  }
-  // 汎用（あいり/先生 自称なし）
-  const generic=[
-    `${name}が${j}として頑張ってる姿、本当にかっこいい！その情熱は絶対に伝わってるよ✨`,
-    `${j}っていう仕事を選んだ${name}のセンス、最高だと思う！🌸`,
-    `${name}が${j}として積み上げてきたもの、全部財産だよ。消えないし必ず活きる！💕`,
-    `${name}の${j}への向き合い方、見てるだけで学びになる！本当にすごい人だよ💫`,
-    `${j}を通じて幸せにできる人の数、${name}はどんどん増やしてるよ！💪`,
-    `${name}みたいな${j}に出会えた人は本当にラッキー。それだけ価値のある存在なんだよ🌺`,
-    `${name}が${j}として発信することで、救われてる人が絶対いるよ。見えてないだけで届いてる！🍀`,
-    `${name}の${j}としての経験と知識、業界トップクラスだよ！その価値、もっと伝えていこう🎉`,
-    `${j}って誰でもできる仕事じゃないよ。${name}だからできてることがたくさんある！💎`,
-    `${name}が${j}を続けてくれてること、関わった人全員が感謝してると思う🌸`,
-    `${name}の${j}への熱量、ちゃんと伝わってるよ。その本気度が人を引きつけてる！⭐`,
-    `${name}みたいに${j}に真剣に向き合える人、なかなかいないよ。だから結果が出るんだよ！🌟`,
-  ];
-  return generic[Math.floor(Math.random()*generic.length)];
-}
-
-function setAiriMsg(txt){
-  const el=document.getElementById('airi-msg');
+function updateNKK(i,num){
+  const el=document.getElementById('nkk'+i);
   if(!el)return;
-  el.style.opacity='0';
-  setTimeout(()=>{el.textContent=txt;el.style.opacity='1';},300);
+  if(!num){el.textContent='';return;}
+  const n=(num>81)?((num-1)%81)+1:num;
+  const kk=KK[n];
+  if(kk){el.textContent=kk.m;el.style.color=kk.m==='○'?'#1a7a2a':kk.m==='△'?'#b06020':'#c03020';}
+  else el.textContent='';
+}
+function applyGC(i){
+  const s=document.getElementById('g'+i);
+  const m={'木':'gm','火':'gh','土':'gd','金':'gk','水':'gw'};
+  s.className='gs'+(m[s.value]?' '+m[s.value]:'');
+}
+function gN(i){const e=document.getElementById('n'+i);return e?(parseInt(e.value)||0):0;}
+function updateYY(i){
+  const n=gN(i);const e=document.getElementById('y'+i);if(!e)return;
+  if(!n){e.textContent='—';e.className='yy';return;}
+  if(n%2===1){e.textContent='陽 〇';e.className='yy yyo';}
+  else{e.textContent='陰 ●';e.className='yy yyi';}
+}
+function gogyoFromNum(n){
+  if(!n)return'';
+  const d=n%10;
+  if(d===1||d===2)return'木';if(d===3||d===4)return'火';
+  if(d===5||d===6)return'土';if(d===7||d===8)return'金';return'水';
+}
+const GCC={'木':'gc-moku','火':'gc-hi','土':'gc-do','金':'gc-kin','水':'gc-sui'};
+const GOGYO_COLOR={'木':'var(--c-moku)','火':'var(--c-hi)','土':'var(--c-do)','金':'var(--c-kin)','水':'var(--c-sui)'};
+function setSansai(id,num,gogyoOverride){
+  const e=document.getElementById(id);
+  if(!num){e.textContent='—';e.className='spv';e.style.color='';return;}
+  const g=gogyoOverride||gogyoFromNum(num);
+  e.textContent=g||'—';
+  e.className='spv '+(GCC[g]||'');
+  e.style.color=GOGYO_COLOR[g]||'var(--ink)';
+}
+// 格の五行: 各セレクトから代表値を算出
+function getKakuGogyo(idxList){
+  // idxList の五行セレクトを確認し、最後の有効値を返す
+  for(let i=idxList.length-1;i>=0;i--){
+    const v=getGogyo(idxList[i]);
+    if(v)return v;
+  }
+  return '';
+}
+function setKB(id,v){const e=document.getElementById(id);if(e)e.textContent=v>0?v:'—';}
+
+/* 吉凶マーク */
+function mkClass(m){return m==='○'?'mk-maru':m==='△'?'mk-sank':'mk-batu';}
+function setHT(id,num){
+  const e=document.getElementById(id);if(!e)return;
+  if(!num){e.textContent='—';e.style.color='var(--ink-f)';return;}
+  const n=(num>81)?((num-1)%81)+1:num;
+  const kk=KK[n];
+  if(kk){
+    e.textContent=kk.m;
+    e.style.color=kk.m==='○'?'#1a7a2a':kk.m==='△'?'#b06020':'#c03020';
+  } else {e.textContent='—';e.style.color='var(--ink-f)';}
 }
 
-function shuffleMsg(){
-  setAiriMsg(generateAiriMsg(nickname));
+function clearKK(){
+  ['ten','jin','chi','gai','so'].forEach(k=>{
+    const ne=document.getElementById('kk-'+k+'-num');
+    const ke=document.getElementById('kk-'+k+'-kana');
+    const de=document.getElementById('kk-'+k+'-desc');
+    if(ne)ne.textContent='—';if(ke)ke.textContent='';if(de)de.textContent='—';
+  });
 }
-
-let appStarted=false;
-function startApp(){
-  const n=document.getElementById('name-input').value.trim();
-  const nick=document.getElementById('nickname-input').value.trim();
-  const j=document.getElementById('job-input').value.trim();
-  if(!n){alert('お名前を入力してね！');return;}
-  if(!nick){alert('呼び名を入力してね！');return;}
-  userName=n; nickname=nick; jobName=j||'お仕事';
-  document.getElementById('setup-modal').style.display='none';
-  document.getElementById('main-app').style.display='block';
-  document.getElementById('main-title').textContent=userName+'の週報';
-  document.title=userName+'の週報';
-  setAiriMsg(jobPraise(jobName,nickname));
-  if(!appStarted){
-    setInterval(()=>{
-      const el=document.getElementById('airi-msg');
-      if(!el)return;
-      el.style.opacity='0';
-      setTimeout(()=>{el.textContent=getRichMsg(nickname);el.style.opacity='1';},400);
-    },30000);
-    appStarted=true;
-    addWeek();
+function updateKK(key,num){
+  if(!num)return;
+  const ne=document.getElementById('kk-'+key+'-num');
+  const ke=document.getElementById('kk-'+key+'-kana');
+  const de=document.getElementById('kk-'+key+'-desc');
+  if(!ne)return;
+  const n=(num>81)?((num-1)%81)+1:num;
+  const kk=KK[n];
+  if(kk){
+    ne.innerHTML=`${num}画　<span class="${mkClass(kk.m)}">${kk.m}</span>`;
+    ke.textContent=kk.n;
+    de.textContent=kk.d;
+  }else{
+    ne.textContent=num+'画';ke.textContent='';de.textContent='';
   }
 }
 
-function saveSettings(){
-  const settings={userName,nickname,jobName};
-  localStorage.setItem('weekly_report_settings',JSON.stringify(settings));
+function recalc(){
+  if(!CT)return;
+  const [sc,nc]=CFG[CT]; const tot=sc+nc;
+  for(let i=1;i<=tot;i++){updateYY(i);updateNKK(i,gN(i));}
+  const n=[];for(let i=1;i<=tot;i++)n.push(gN(i));
+  let ten=0,jin=0,chi=0,so=0,gai=0;
+  const s=sc; // sei count
+  if(CT==='1-1'){ten=n[0];chi=n[1];so=n[0]+n[1];jin=n[0]+n[1];gai=so-jin+n[0]+n[1];}
+  else if(CT==='1-2'){ten=n[0];chi=n[1]+n[2];so=n[0]+n[1]+n[2];jin=n[0]+n[1];gai=so-jin+n[0];}
+  else if(CT==='2-1'){ten=n[0]+n[1];chi=n[2];so=n[0]+n[1]+n[2];jin=n[1]+n[2];gai=so-jin+n[2];}
+  else if(CT==='2-2'){ten=n[0]+n[1];chi=n[2]+n[3];so=n[0]+n[1]+n[2]+n[3];jin=n[1]+n[2];gai=so-jin;}
+  else if(CT==='3-1'){ten=n[0]+n[1]+n[2];chi=n[3];so=n[0]+n[1]+n[2]+n[3];jin=n[2]+n[3];gai=so-jin+n[3];}
+  else if(CT==='1-3'){ten=n[0];chi=n[1]+n[2]+n[3];so=n[0]+n[1]+n[2]+n[3];jin=n[0]+n[1];gai=so-jin+n[0];}
+  else if(CT==='2-3'){ten=n[0]+n[1];chi=n[2]+n[3]+n[4];so=n[0]+n[1]+n[2]+n[3]+n[4];jin=n[1]+n[2];gai=so-jin;}
+  else if(CT==='3-2'){ten=n[0]+n[1]+n[2];chi=n[3]+n[4];so=n[0]+n[1]+n[2]+n[3]+n[4];jin=n[2]+n[3];gai=so-jin;}
+  setKB('v-ten',ten);setKB('v-jin',jin);setKB('v-chi',chi);setKB('v-gai',gai);
+  const se=document.getElementById('v-so');if(se)se.textContent=so>0?so:'—';
+  // 総格の吉凶マーク
+  const soKKEl=document.getElementById('nkk-so');
+  if(soKKEl){
+    if(so>0){const n2=(so>81)?((so-1)%81)+1:so;const kk2=KK[n2];if(kk2){soKKEl.textContent=kk2.m;soKKEl.style.color=kk2.m==='○'?'#1a7a2a':kk2.m==='△'?'#b06020':'#c03020';}else soKKEl.textContent='';}
+    else soKKEl.textContent='';
+  }
+  setHT('ht-ten',ten);setHT('ht-jin',jin);setHT('ht-chi',chi);setHT('ht-gai',gai);
+  // 三才の五行: 天格・人格・地格の合計画数の下1桁から算出
+  const tenG=gogyoFromNum(ten);
+  const jinG=gogyoFromNum(jin);
+  const chiG=gogyoFromNum(chi);
+  setSansai('st',ten,tenG);setSansai('sj',jin,jinG);setSansai('sc',chi,chiG);
+  updateKK('ten',ten);updateKK('jin',jin);updateKK('chi',chi);
+  updateKK('gai',gai);updateKK('so',so);
+  // 音霊計算
+  updateOtodama(tot);
+  // 各判定
+  updateSansaiHantei(ten,jin,chi);
+  updateOtodamaHantei(tot);
+  updateYYHantei(tot);
+  updateBalanceHantei(tot,ten,jin,chi);
 }
 
-function loadSettings(){
-  const raw=localStorage.getItem('weekly_report_settings');
-  if(!raw)return false;
-  const settings=JSON.parse(raw);
-  userName=settings.userName; nickname=settings.nickname; jobName=settings.jobName;
-  return true;
+/* ── 音霊 (上下の五行関係) ── */
+function getGogyo(i){
+  const el=document.getElementById('g'+i);
+  return el?el.value:'';
+}
+function otodamaRelation(g1,g2){
+  if(!g1||!g2)return'';
+  if(g1===g2)return'○'; // 比和
+  // 相生: 木火, 火土, 土金, 金水, 水木 (順不同)
+  const seiso=[['木','火'],['火','土'],['土','金'],['金','水'],['水','木']];
+  for(const [a,b] of seiso){
+    if((g1===a&&g2===b)||(g1===b&&g2===a))return'○';
+  }
+  // 相剋: 木剋土, 火剋金, 水剋火, 土剋水, 金剋木 (双方向)
+  const sokok=[['木','土'],['火','金'],['水','火'],['土','水'],['金','木']];
+  for(const [a,b] of sokok){
+    if((g1===a&&g2===b)||(g1===b&&g2===a))return'✕';
+  }
+  return'';
+}
+function updateOtodama(tot){
+  // 新構造: ot2〜otTot のスパンが ot-boxes 内にある
+  for(let i=2;i<=tot;i++){
+    const el=document.getElementById('ot'+i);
+    if(!el)continue;
+    const g_above=getGogyo(i-1);
+    const g_curr=getGogyo(i);
+    const rel=otodamaRelation(g_above,g_curr);
+    if(!rel){el.textContent='—';el.style.color='var(--ink-f)';}
+    else if(rel==='○'){el.textContent='○';el.style.color='#1a7a2a';}
+    else{el.textContent='✕';el.style.color='#c03020';}
+  }
 }
 
-function initializeApp(){
-  // 原本として配布するため、localStorageを一切読み込まない
-  // 常に空の状態・初期設定モーダルから始まる
-  document.getElementById('setup-modal').style.display='flex';
-  document.getElementById('main-app').style.display='none';
+/* ── 吉凶マーク取得 ── */
+function htMark(num){
+  if(!num)return'';
+  const n=(num>81)?((num-1)%81)+1:num;
+  const kk=KK[n];return kk?kk.m:'';
 }
 
-function openSettings(){
-  document.getElementById('name-input').value=userName;
-  document.getElementById('nickname-input').value=nickname;
-  document.getElementById('job-input').value=jobName!=='お仕事'?jobName:'';
-  document.getElementById('setup-modal').style.display='flex';
+/* ── 三才・バランス判定ロジック ── */
+function gogyoOf(num){
+  // 画数から五行
+  if(!num)return'';
+  const d=num%10;
+  if(d===1||d===2)return'木';if(d===3||d===4)return'火';
+  if(d===5||d===6)return'土';if(d===7||d===8)return'金';return'水';
+}
+function getGogyoFromSansai(ten,jin,chi){
+  // 格の五行を取得（三才配置の五行は天・人・地の画数から算出）
+  return [gogyoOf(ten), gogyoOf(jin), gogyoOf(chi)];
+}
+function isSansaiSameAll(tG,jG,cG){return tG&&jG&&cG&&tG===jG&&jG===cG;}
+
+// 相生関係チェック（順不問）
+function isSeiso(a,b){
+  const pairs=[['木','火'],['火','土'],['土','金'],['金','水'],['水','木']];
+  return pairs.some(([x,y])=>(a===x&&b===y)||(a===y&&b===x));
+}
+// 相剋関係チェック（順不問）
+function isSokok(a,b){
+  const pairs=[['木','土'],['火','金'],['水','火'],['土','水'],['金','木']];
+  return pairs.some(([x,y])=>(a===x&&b===y)||(a===y&&b===x));
 }
 
-// カテゴリ・媒体セレクトを生成する共通関数
-function buildCatOptions(selectedCat=''){
-  return `<option value="">選択</option>`+CATEGORIES.map(c=>`<option value="${c}"${selectedCat===c?' selected':''}>${c}</option>`).join('');
-}
-function buildPltOptions(cat, selectedPlt=''){
-  if(!cat) return `<option value="">媒体を選択</option>`;
-  return `<option value="">媒体を選択</option>`+(PLATFORMS[cat]||[]).map(p=>`<option value="${p}"${selectedPlt===p?' selected':''}>${p}</option>`).join('');
+// 次旺名判定
+function isJiou(tG,jG,cG){
+  if(!tG||!jG||!cG)return false;
+  // 人格が中心: 1か所相生+1か所比和
+  // 人格が木: 木木水, 水木木, 水木水
+  // 人格が火: 火火木, 木火火, 木火木
+  // 人格が土: 土土火, 火土土, 火土火
+  // 人格が金: 金金土, 土金金, 土金土
+  // 人格が水: 水水金, 金水水, 金水金
+  const jiouSets={
+    '木':[['木','木','水'],['水','木','木'],['水','木','水']],
+    '火':[['火','火','木'],['木','火','火'],['木','火','木']],
+    '土':[['土','土','火'],['火','土','土'],['火','土','火']],
+    '金':[['金','金','土'],['土','金','金'],['土','金','土']],
+    '水':[['水','水','金'],['金','水','水'],['金','水','金']],
+  };
+  const sets=jiouSets[jG]||[];
+  return sets.some(([t,j,c])=>t===tG&&j===jG&&c===cG);
 }
 
-// 全セレクトを最新カテゴリ・媒体で更新（追加・削除後に呼ぶ）
-function syncAllSelects(){
-  // 目標行のカテゴリ
-  document.querySelectorAll('.goal-row').forEach(row=>{
-    const catSel=row.querySelector('.cat-sel');
-    const pltSel=row.querySelector('.plt-sel');
-    if(!catSel||!pltSel)return;
-    const curCat=catSel.value;
-    const curPlt=pltSel.value;
-    catSel.innerHTML=buildCatOptions(curCat);
-    if(curCat){
-      pltSel.innerHTML=buildPltOptions(curCat,curPlt);
-      pltSel.style.display='block';
-    } else {
-      pltSel.style.display='none';
+// 危険名 パターン
+const KIKEN1=[['金','火','水'],['土','水','水'],['金','木','水'],['火','金','水'],['金','水','火'],['金','土','水']];
+const KIKEN2=[['水','火','水'],['金','木','金'],['火','金','火'],['木','土','木']];
+const KIKEN3=[['木','土','水'],['土','水','火'],['土','水','土'],['土','火','水'],['水','火','木'],['水','水','土']];
+
+function kikenType(tG,jG,cG){
+  if(!tG||!jG||!cG)return 0;
+  const key=[tG,jG,cG];
+  if(KIKEN1.some(p=>p[0]===key[0]&&p[1]===key[1]&&p[2]===key[2]))return 1;
+  if(KIKEN2.some(p=>p[0]===key[0]&&p[1]===key[1]&&p[2]===key[2]))return 2;
+  if(KIKEN3.some(p=>p[0]===key[0]&&p[1]===key[1]&&p[2]===key[2]))return 3;
+  return 0;
+}
+
+// 相生名パターン
+const SOSEI={
+  '木':[['火','木','水'],['水','木','火'],['水','木','土'],['火','木','土']],
+  '火':[['木','火','土'],['土','火','木']],
+  '土':[['火','土','金'],['金','土','火']],
+  '金':[['土','金','水'],['水','金','土']],
+  '水':[['木','水','金'],['金','水','木']],
+};
+function isSosei(tG,jG,cG){
+  if(!tG||!jG||!cG)return false;
+  const sets=SOSEI[jG]||[];
+  return sets.some(([t,j,c])=>t===tG&&j===jG&&c===cG);
+}
+
+// 三才分類（身旺はupdateSansaiHanteiで処理済みのためここでは除外）
+function sansaiType(tG,jG,cG){
+  if(!tG||!jG||!cG)return null;
+  const kt=kikenType(tG,jG,cG);
+  if(kt>0)return'危険名:'+kt;
+  if(isJiou(tG,jG,cG))return'次旺名';
+  if(isSosei(tG,jG,cG))return'相生名';
+  return null;
+}
+
+const SANSAI_DESC={
+  '身旺名':'特殊な発達をしていく旺盛運で、社会的に大いに名を成すが、運命的に波乱があり、家庭的にも問題を起こしやすく、配偶者や子供運に恵まれない場合が多い。',
+  '次旺名':'波乱が少なく周りと調和できる。自身の能力、個性を活かして人の上に立ち社会に頭角を現す大吉運。',
+  '危険名1':'負傷や遭難、交通事故などの危険運あり',
+  '危険名2':'神経系統や肺結核、脳病などの難病の危険運あり',
+  '危険名3':'事故災難に会ったり、短命に終わったりするなど凶運に見舞われやすい',
+  '相生名':'健康運、愛情運、物質運の三要素が程よく調和して過不足なく得られる。\n\n特に女命に良い',
+};
+
+function sansaiRelMark(g1,g2){
+  // 上下の五行の関係を返す: ○(相生/比和/木剋土例外) ✕(相剋) —(不明)
+  if(!g1||!g2)return'—';
+  if(g1===g2)return'○';
+  // 木剋土は三才判定では例外として吉
+  if((g1==='木'&&g2==='土')||(g1==='土'&&g2==='木'))return'○';
+  const seiso=[['木','火'],['火','土'],['土','金'],['金','水'],['水','木']];
+  if(seiso.some(([a,b])=>(g1===a&&g2===b)||(g1===b&&g2===a)))return'○';
+  const sokok=[['火','金'],['水','火'],['土','水'],['金','木']];
+  if(sokok.some(([a,b])=>(g1===a&&g2===b)||(g1===b&&g2===a)))return'✕';
+  return'—';
+}
+
+function updateSansaiHantei(ten,jin,chi){
+  const htEl=document.getElementById('sp-hantei');
+  const kkEl=document.getElementById('sp-kk');
+  const relTJ=document.getElementById('sp-rel-tj');
+  const relJC=document.getElementById('sp-rel-jc');
+  if(!htEl)return;
+
+  // 三才五行は格合計の画数下1桁から算出
+  const tG=gogyoFromNum(ten),jG=gogyoFromNum(jin),cG=gogyoFromNum(chi);
+
+  if(!ten&&!jin&&!chi){
+    htEl.textContent='—';htEl.style.color='var(--ink-f)';
+    if(kkEl){kkEl.textContent='—';kkEl.style.color='var(--ink-f)';}
+    if(relTJ){relTJ.textContent='—';relTJ.style.color='var(--ink-f)';}
+    if(relJC){relJC.textContent='—';relJC.style.color='var(--ink-f)';}
+    setSansaiBL(null,'—');return;
+  }
+
+  // 身旺判定: 天・人・地が全て同じ五行
+  const isShinnou=tG&&jG&&cG&&tG===jG&&jG===cG;
+  if(isShinnou){
+    htEl.textContent='身旺';htEl.style.color='var(--c-hi)';htEl.style.fontSize='1.05rem';
+    if(kkEl){kkEl.textContent='凶';kkEl.style.color='#c03020';}
+    setSansaiBL('身旺','凶');return;
+  }
+
+  // 天↓人, 人↓地 の関係
+  const mTJ=sansaiRelMark(tG,jG);
+  const mJC=sansaiRelMark(jG,cG);
+
+  function setMark(el,m){
+    if(!el)return;
+    el.textContent=m;
+    el.style.color=m==='○'?'var(--c-moku)':m==='✕'?'var(--c-hi)':'var(--ink-f)';
+  }
+  setMark(relTJ,mTJ);
+  setMark(relJC,mJC);
+
+  // 吉凶: 1つでも✕なら凶
+  const hasKyou=[mTJ,mJC].some(m=>m==='✕');
+  const hasData=tG&&jG&&cG;
+  let kkLabel='—',kkColor='var(--ink-f)';
+  if(hasData){
+    if(hasKyou){kkLabel='凶';kkColor='var(--c-hi)';}
+    else{kkLabel='吉';kkColor='var(--c-moku)';}
+  }
+  const kkDispCol=hasData?(hasKyou?'#c03020':'#1a7a2a'):'var(--ink-f)';
+  if(kkEl){kkEl.textContent=kkLabel;kkEl.style.color=kkDispCol;}
+
+  // 分類判定（次旺名/危険名/相生名）※身旺は上で処理済み
+  const type=sansaiType(tG,jG,cG);
+  let label='—',color='var(--ink-f)';
+  if(type==='次旺名'){label='次旺名';color='var(--c-moku)';}
+  else if(type&&type.startsWith('危険名')){label='危険名 ×';color='var(--c-hi)';}
+  else if(type==='相生名'){label='相生名';color='var(--c-moku)';}
+  htEl.textContent=label;htEl.style.color=color;htEl.style.fontSize='1.05rem';
+
+  // バランス判定テーブルにも吉凶を渡す
+  setSansaiBL(type,hasData?kkLabel:'—');
+}
+
+// バランス判定テーブルの三才欄を更新
+function setSansaiBL(type,kkLabel){
+  const el=document.getElementById('bl-sansai-kk');
+  const de=document.getElementById('bl-sansai-desc');
+  if(!el||!de)return;
+
+  // 身旺は専用表示
+  if(type==='身旺'){
+    el.innerHTML='<span style="color:var(--c-hi);font-weight:700">凶（身旺）</span>';
+    de.style.whiteSpace='pre-wrap';
+    de.textContent='特殊な発達をしていく旺盛運で、社会的に大いに名を成すが、運命的に波乱があり\n\n家庭的にも問題を起こしやすく、配偶者や子供運に恵まれない場合が多い。';
+    return;
+  }
+
+  // 吉凶ラベル表示
+  const isKyou=(kkLabel==='凶')||(type&&type.startsWith('危険名'));
+  const isKichi=(kkLabel==='吉')||type==='次旺名'||type==='相生名';
+  let kkHTML='—';
+  if(isKyou) kkHTML='<span style="color:var(--c-hi);font-weight:700">凶</span>';
+  else if(isKichi) kkHTML='<span style="color:var(--c-moku);font-weight:700">吉</span>';
+  el.innerHTML=kkHTML;
+  de.style.whiteSpace='pre-wrap';
+
+  // 事象説明
+  if(!type){
+    de.textContent=(kkLabel==='凶')?'五行の相剋関係により運勢に障害が生じやすい':'';
+    return;
+  }
+  if(type==='次旺名') de.textContent=SANSAI_DESC['次旺名'];
+  else if(type==='危険名:1') de.textContent=SANSAI_DESC['危険名1'];
+  else if(type==='危険名:2') de.textContent=SANSAI_DESC['危険名2'];
+  else if(type==='危険名:3') de.textContent=SANSAI_DESC['危険名3'];
+  else if(type==='相生名') de.textContent=SANSAI_DESC['相生名'];
+  else de.textContent='';
+}
+
+/* ── 音霊列の判定: 半数以上○なら吉 ── */
+function updateOtodamaHantei(tot){
+  const el=document.getElementById('ot-hantei');
+  const blKK=document.getElementById('bl-ot-kk');
+  const blDesc=document.getElementById('bl-ot-desc');
+  const marks=[];
+  for(let i=2;i<=tot;i++){
+    const oe=document.getElementById('ot'+i);
+    if(oe)marks.push(oe.textContent);
+  }
+  const valid=marks.filter(m=>m==='○'||m==='✕');
+  if(valid.length===0){
+    if(el){el.textContent='—';el.style.color='var(--ink-f)';}
+    if(blKK)blKK.textContent='—';if(blDesc)blDesc.textContent='';
+    return;
+  }
+  const maruCount=valid.filter(m=>m==='○').length;
+  // 半数以上○なら吉
+  const isKichi=maruCount*2>=valid.length;
+  const label=isKichi?'吉':'凶';
+  const col=isKichi?'var(--c-moku)':'var(--c-hi)';
+  const dispCol=isKichi?'#1a7a2a':'#c03020';
+  if(el){el.textContent=label;el.style.color=dispCol;}
+  if(blKK){blKK.innerHTML=`<span style="color:${col};font-weight:700">${label}</span>`;}
+  if(blDesc){blDesc.textContent=isKichi?'':'相剋の関係が多く不調和';}
+}
+
+/* ── 陰陽パターン定義 ── */
+// 〇=陽, ●=陰
+const YY_PATTERNS={
+  大吉格:{
+    desc:'自然に富貴長寿が保たれる。健康に恵まれる。願望達成しやすい',
+    good:true,
+    pat:{
+      2:[['陽','陰'],['陰','陽']],
+      3:[['陽','陽','陰'],['陽','陰','陰'],['陰','陽','陽'],['陰','陰','陽']],
+      4:[['陽','陽','陰','陽'],['陽','陰','陽','陽'],['陽','陰','陽','陰'],
+         ['陰','陰','陽','陰'],['陰','陽','陰','陰'],['陰','陽','陰','陽']],
+      5:[['陽','陽','陽','陰','陽']]
     }
-  });
-  // 予定アイテムのカテゴリ
-  document.querySelectorAll('.plan-item').forEach(pi=>{
-    const catSel=pi.querySelector('.cat-sel-p');
-    const pltSel=pi.querySelector('[id$="-plt"]');
-    if(!catSel||!pltSel)return;
-    const curCat=catSel.value;
-    const curPlt=pltSel.value;
-    catSel.innerHTML=`<option value="">カテゴリ</option>`+CATEGORIES.map(c=>`<option value="${c}"${curCat===c?' selected':''}>${c}</option>`).join('');
-    if(curCat){
-      pltSel.innerHTML=buildPltOptions(curCat,curPlt);
-      pltSel.style.display='block';
-    } else {
-      pltSel.style.display='none';
+  },
+  大凶格:{
+    desc:'いろいろな障害にあい一生苦労が多い',
+    good:false,
+    pat:{
+      2:[['陰','陰'],['陽','陽']],
+      3:[['陰','陰','陰'],['陽','陽','陽']],
+      4:[['陰','陰','陰','陰'],['陽','陽','陽','陽']],
+      5:[['陰','陰','陰','陰','陰'],['陽','陽','陽','陽','陽']]
     }
-  });
-  // カスタムモーダルのカテゴリも更新
-  const cmCatSel=document.getElementById('custom-platform-cat-sel');
-  if(cmCatSel) cmCatSel.innerHTML=CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
-  const delCatSel=document.getElementById('delete-platform-cat-sel');
-  if(delCatSel){ delCatSel.innerHTML=CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join(''); updateDeleteList(); }
-}
+  },
+  離別格:{
+    desc:'離婚や生死別、親族と疎遠になるなど困難苦労が多い',
+    good:false,
+    pat:{
+      4:[['陰','陰','陽','陽'],['陽','陽','陰','陰']],
+      5:[['陰','陰','陽','陽','陽'],['陽','陽','陰','陰','陰'],['陽','陽','陽','陰','陰'],['陰','陰','陰','陽','陽']]
+    }
+  },
+  災難格:{
+    desc:'火災、水難、台風などの自然災害、盗難、など災難にあう恐れあり',
+    good:false,
+    pat:{
+      4:[['陰','陰','陰','陽'],['陽','陽','陽','陰']],
+      5:[['陰','陰','陰','陰','陽'],['陽','陽','陽','陽','陰']]
+    }
+  },
+  挟難格:{
+    desc:'難病を患う、身体不自由、事件に巻き込まれる',
+    good:false,
+    pat:{
+      3:[['陰','陽','陰'],['陽','陰','陽']],
+      4:[['陰','陽','陽','陰'],['陽','陰','陰','陽']],
+      5:[['陰','陰','陽','陽','陰'],['陽','陽','陰','陰','陽'],['陰','陽','陽','陽','陰'],['陽','陰','陰','陰','陽']]
+    }
+  }
+};
 
-function buildGoalRowHTML(rowId,cardId){
-  return `
-    <button class="btn-remove-goal" onclick="document.getElementById('${rowId}').remove()" title="削除">×</button>
-    <div class="goal-row-filters">
-      <span class="filter-label">カテゴリ：</span>
-      <select class="f-sel cat-sel" onchange="updatePlatformSel(this,'${rowId}')">
-        ${buildCatOptions()}
-      </select>
-      <select class="f-sel plt-sel" style="display:none;"><option value="">媒体を選択</option></select>
-      <button class="btn-add-custom" onclick="openCustomModal(()=>syncAllSelects())">＋ 新規追加</button>
-      <button class="btn-add-custom" style="background:#fff5f5;color:#e57373;border-color:#e57373;" onclick="openDeleteModal()">項目削除</button>
-    </div>
-    <textarea class="goal-text" placeholder="目標・取り組みたいことを入力" oninput="autoH(this);onGoalType('${cardId}',this)"></textarea>`;
+// 配列マッチ
+function matchYYPattern(vals,tot){
+  for(const [name,info] of Object.entries(YY_PATTERNS)){
+    const pats=info.pat[tot]||[];
+    if(pats.some(p=>p.every((v,i)=>v===vals[i])))return{name,info};
+  }
+  return null;
 }
-let customCB=null;
-function openCustomModal(cb){
-  customCB=cb;
-  // カテゴリ一覧をセット
-  const typeSel=document.getElementById('custom-type-sel');
-  typeSel.value='category';
-  toggleCustomType();
-  document.getElementById('custom-name-input').value='';
-  document.getElementById('custom-modal').classList.add('show');
-  setTimeout(()=>document.getElementById('custom-name-input').focus(),100);
-}
-function toggleCustomType(){
-  const type=document.getElementById('custom-type-sel').value;
-  const row=document.getElementById('custom-platform-cat-row');
-  if(type==='platform'){
-    row.style.display='block';
-    const sel=document.getElementById('custom-platform-cat-sel');
-    sel.innerHTML=CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
+// 陰陽の判定
+function updateYYHantei(tot){
+  const el=document.getElementById('yy-hantei');
+  if(!el)return;
+  const vals=[];
+  for(let i=1;i<=tot;i++){
+    const ye=document.getElementById('y'+i);
+    if(ye&&ye.textContent&&ye.textContent!=='—')vals.push(ye.textContent.slice(0,1)==='陽'?'陽':'陰');
+    else vals.push(null);
+  }
+  const filled=vals.filter(v=>v);
+  if(filled.length<tot){
+    el.textContent='—';el.style.color='var(--ink-f)';el.style.fontSize='';
+    setYYBL(null);return;
+  }
+  const match=matchYYPattern(vals,tot);
+  if(match){
+    const {name,info}=match;
+    el.textContent=name;
+    el.style.color=info.good?'var(--c-moku)':'var(--c-hi)';
+    el.style.fontSize='';
+    setYYBL(match);
   } else {
-    row.style.display='none';
+    el.textContent='—';el.style.color='var(--ink-f)';el.style.fontSize='';
+    setYYBL(null);
   }
 }
-function closeCustomModal(){document.getElementById('custom-modal').classList.remove('show');customCB=null;}
-function saveCustomItem(){
-  const type=document.getElementById('custom-type-sel').value;
-  const name=document.getElementById('custom-name-input').value.trim();
-  if(!name){alert('名前を入力してください');return;}
-  if(type==='category'){
-    if(!CATEGORIES.includes(name)){
-      CATEGORIES.push(name);
-      if(!PLATFORMS[name]) PLATFORMS[name]=[];
-    } else { alert('そのカテゴリは既にあります'); return; }
+function setYYBL(match){
+  const kk=document.getElementById('bl-yy-kk');
+  const de=document.getElementById('bl-yy-desc');
+  if(!kk||!de)return;
+  if(!match){kk.textContent='—';de.textContent='';return;}
+  const {name,info}=match;
+  const col=info.good?'#1a7a2a':'#c03020';
+  kk.innerHTML=`<span style="color:${col};font-weight:700">${name}</span>`;
+  de.textContent=info.desc;
+}
+
+/* ── バランス判定: 三才・音霊・陰陽 に1つでも凶があれば凶, 全吉のみ吉 ── */
+function updateBalanceHantei(tot,ten,jin,chi){
+  const el=document.getElementById('bl-balance-kk');
+  if(!el)return;
+  // 三才の吉凶
+  const kkEl=document.getElementById('sp-kk');
+  const sansaiOK=kkEl&&kkEl.textContent==='吉';
+  // 音霊: bl-ot-kk の吉凶を参照
+  const otBlEl=document.getElementById('bl-ot-kk');
+  const otOK=otBlEl&&otBlEl.textContent.includes('吉');
+  // 陰陽: 吉パターン(good:true)かどうか
+  const yyEl=document.getElementById('yy-hantei');
+  const yyTxt=yyEl?yyEl.textContent:'';
+  const yyOK=Object.entries(YY_PATTERNS).some(([n,inf])=>inf.good&&n===yyTxt);
+
+  // 音霊の有効マーク数を直接計算
+  const otMarks=[];
+  for(let i=2;i<=tot;i++){const oe=document.getElementById('ot'+i);if(oe)otMarks.push(oe.textContent);}
+  const otValidCount=otMarks.filter(m=>m==='○'||m==='✕').length;
+
+  const hasData=(ten>0||jin>0||chi>0||otValidCount>0);
+  if(!hasData){el.innerHTML='—';el.style.color='var(--ink-f)';return;}
+  // 1つでも凶なら凶
+  const hasBad=!sansaiOK||!otOK||!yyOK;
+  if(hasBad){
+    el.innerHTML='<span style="color:#c03020;font-weight:700">凶</span>';
   } else {
-    const cat=document.getElementById('custom-platform-cat-sel').value;
-    if(!PLATFORMS[cat]) PLATFORMS[cat]=[];
-    if(!PLATFORMS[cat].includes(name)){
-      PLATFORMS[cat].push(name);
-    } else { alert('その媒体は既にあります'); return; }
-  }
-  closeCustomModal();
-  syncAllSelects();
-  if(customCB) customCB();
-}
-
-// 削除モーダル
-function openDeleteModal(){
-  const typeSel=document.getElementById('delete-type-sel');
-  typeSel.value='category';
-  // カテゴリセレクトを更新
-  const catSel=document.getElementById('delete-platform-cat-sel');
-  catSel.innerHTML=CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
-  document.getElementById('delete-platform-cat-row').style.display='none';
-  updateDeleteList();
-  document.getElementById('delete-modal').classList.add('show');
-}
-function closeDeleteModal(){document.getElementById('delete-modal').classList.remove('show');}
-function updateDeleteList(){
-  const type=document.getElementById('delete-type-sel').value;
-  const itemSel=document.getElementById('delete-item-sel');
-  const platCatRow=document.getElementById('delete-platform-cat-row');
-  if(type==='category'){
-    platCatRow.style.display='none';
-    itemSel.innerHTML=CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
-  } else {
-    platCatRow.style.display='block';
-    const cat=document.getElementById('delete-platform-cat-sel').value;
-    const plts=PLATFORMS[cat]||[];
-    itemSel.innerHTML=plts.length>0
-      ? plts.map(p=>`<option value="${p}">${p}</option>`).join('')
-      : '<option value="">（媒体がありません）</option>';
+    el.innerHTML='<span style="color:#1a7a2a;font-weight:700">吉</span>';
   }
 }
-function executeDelete(){
-  const type=document.getElementById('delete-type-sel').value;
-  const item=document.getElementById('delete-item-sel').value;
-  if(!item){alert('削除する項目を選んでください');return;}
-  if(!confirm(`「${item}」を削除しますか？`))return;
-  if(type==='category'){
-    const idx=CATEGORIES.indexOf(item);
-    if(idx>-1){ CATEGORIES.splice(idx,1); delete PLATFORMS[item]; }
-  } else {
-    const cat=document.getElementById('delete-platform-cat-sel').value;
-    if(PLATFORMS[cat]){
-      const idx=PLATFORMS[cat].indexOf(item);
-      if(idx>-1) PLATFORMS[cat].splice(idx,1);
-    }
-  }
-  closeDeleteModal();
-  syncAllSelects();
-}
-
-function fmtDate(d){return d.toISOString().split('T')[0];}
-function getMonday(d){
-  const day=d.getDay();
-  const m=new Date(d);
-  m.setDate(d.getDate()-day+(day===0?-6:1));
-  return m;
-}
-
-function addWeek(){
-  wc++;
-  const container=document.getElementById('weeks');
-  const id='w'+wc;
-  const prevEnds=container.querySelectorAll('.end-date-input');
-  let start;
-  if(prevEnds.length>0 && prevEnds[prevEnds.length-1].value){
-    start=new Date(prevEnds[prevEnds.length-1].value);
-    start.setDate(start.getDate()+1);
-  } else {
-    start=getMonday(new Date());
-  }
-  const end=new Date(start);
-  end.setDate(start.getDate()+6);
-
-  const card=document.createElement('div');
-  card.className='week-card'; card.id=id;
-  card.innerHTML=buildWeekHTML(id,wc,fmtDate(start),fmtDate(end));
-  container.appendChild(card);
-  addGoalRow(id+'-goal-rows',id);
-  if(wc>1){shuffleMsg();setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),100);}
-}
-
-function buildWeekHTML(id,num,sv,ev){
-  return `
-    <div class="card-top">
-      <div class="sort-btns">
-        <button class="sort-btn" onclick="moveWeek('${id}',-1)" title="上へ">▲</button>
-        <button class="sort-btn" onclick="moveWeek('${id}',1)" title="下へ">▼</button>
-      </div>
-      <button class="del-week" onclick="deleteWeek('${id}')">🗑 この週を削除</button>
-    </div>
-    <div class="date-row">
-      <span class="date-label">📅 期間：</span>
-      <input type="date" class="start-date-input" value="${sv}">
-      <span class="sep">〜</span>
-      <input type="date" class="end-date-input" value="${ev}">
-    </div>
-    <div class="goal-section">
-      <div class="goal-sec-title">🎯 今週の目標</div>
-      <div class="goal-rows" id="${id}-goal-rows"></div>
-      <button class="btn-add-goal" onclick="addGoalRow('${id}-goal-rows','${id}')">＋ 目標を追加</button>
-    </div>
-    <div id="${id}-daily">
-      <div class="daily-label-row">
-        <div class="daily-label" style="display:flex;align-items:center;gap:10px;">📆 一日ごとの予定 <button class="gen-btn" style="font-size:12px;padding:6px 14px;" onclick="generateDays('${id}')">日にち別に予定をかく</button></div>
-      </div>
-      <div style="font-size:13px;color:#bbb;text-align:center;padding:14px 0;border:1.5px dashed #ffecef;border-radius:10px;" id="${id}-hint">
-        期間を設定して「日にち別に予定をかく」を押してね🌸
-      </div>
-    </div>
-    <hr class="divider">
-    <div style="font-size:13px;font-weight:700;color:#c2185b;margin-bottom:7px;">💬 週全体の振り返り</div>
-    <textarea class="field" id="${id}-review" placeholder="1週間を振り返って…達成できたこと、次週への気づきなど" oninput="autoH(this)"></textarea>
-    <div class="result-section">
-      <div class="result-title">📊 【結果】</div>
-      <div class="result-grid">
-        <div class="result-item">
-          <div class="result-item-label">フォロワー増減</div>
-          <div class="result-input-wrap"><input type="number" class="result-num" id="${id}-r-follower" placeholder="0"><span class="result-unit">人</span></div>
-        </div>
-        <div class="result-item">
-          <div class="result-item-label">LINE登録</div>
-          <div class="result-input-wrap"><input type="number" class="result-num" id="${id}-r-line" placeholder="0"><span class="result-unit">人</span></div>
-        </div>
-        <div class="result-item">
-          <div class="result-item-label">申込み数</div>
-          <div class="result-input-wrap"><input type="number" class="result-num" id="${id}-r-apply" placeholder="0"><span class="result-unit">件</span></div>
-        </div>
-        <div class="result-item">
-          <div class="result-item-label">売上</div>
-          <div class="result-input-wrap"><input type="number" class="result-num" id="${id}-r-sales" placeholder="0"><span class="result-unit">円</span></div>
-        </div>
-      </div>
-    </div>`;
-}
-
-function deleteWeek(id){
-  if(!confirm('この週を削除しますか？'))return;
-  const el=document.getElementById(id);
-  if(el){el.remove(); setAiriMsg(nickname+'、いらないものを整理するのも大事な仕事！素敵な判断だよ🌸');}
-}
-
-// 週カードの順番入れ替え
-function moveWeek(id, direction){
-  const container=document.getElementById('weeks');
-  const card=document.getElementById(id);
-  if(!card||!container)return;
-  const cards=[...container.querySelectorAll(':scope > .week-card')];
-  const idx=cards.indexOf(card);
-  const targetIdx=idx+direction;
-  if(targetIdx<0||targetIdx>=cards.length)return;
-  // アニメーション
-  card.style.transition='opacity 0.15s';
-  card.style.opacity='0.5';
-  setTimeout(()=>{
-    if(direction===-1){
-      container.insertBefore(card, cards[targetIdx]);
-    } else {
-      cards[targetIdx].insertAdjacentElement('afterend', card);
-    }
-    card.style.opacity='1';
-  },120);
-}
-
-function addGoalRow(cid,cardId){
-  const c=document.getElementById(cid);
-  const rowId=cid+'-row-'+Date.now();
-  const d=document.createElement('div');
-  d.className='goal-row'; d.id=rowId;
-  d.innerHTML=buildGoalRowHTML(rowId,cardId);
-  c.appendChild(d);
-}
-function buildGoalRowHTML(rowId,cardId){
-  const catOpts=CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
-  return `
-    <button class="btn-remove-goal" onclick="document.getElementById('${rowId}').remove()" title="削除">×</button>
-    <div class="goal-row-filters">
-      <span class="filter-label">カテゴリ：</span>
-      <select class="f-sel cat-sel" onchange="updatePlatformSel(this,'${rowId}')">
-        <option value="">選択</option>${catOpts}
-      </select>
-      <select class="f-sel plt-sel" style="display:none;"><option value="">媒体を選択</option></select>
-      <button class="btn-add-custom" onclick="openCustomModal(()=>refreshAllGoalRows())">＋ 新規追加</button>
-      <button class="btn-add-custom" style="background:#fff5f5;color:#e57373;border-color:#e57373;" onclick="openDeleteModal()">項目削除</button>
-    </div>
-    <textarea class="goal-text" placeholder="目標・取り組みたいことを入力" oninput="autoH(this);onGoalType('${cardId}',this)"></textarea>`;
-}
-function updatePlatformSel(catSel,rowId){
-  const row=document.getElementById(rowId);
-  const plt=row.querySelector('.plt-sel');
-  const cat=catSel.value;
-  if(!cat){plt.style.display='none';return;}
-  plt.innerHTML=`<option value="">媒体を選択</option>`+(PLATFORMS[cat]||[]).map(p=>`<option value="${p}">${p}</option>`).join('');
-  plt.style.display='block';
-}
-function refreshAllGoalRows(){
-  document.querySelectorAll('.goal-row').forEach(row=>{
-    const cs=row.querySelector('.cat-sel');
-    if(cs&&cs.value) updatePlatformSel(cs,row.id);
-  });
-}
-function onGoalType(cardId,ta){if(ta.value.trim().length>3) setAiriMsg(jobPraise(jobName,nickname));}
-
-function generateDays(cardId){
-  const card=document.getElementById(cardId);
-  const sv=card.querySelector('.start-date-input').value;
-  const ev=card.querySelector('.end-date-input').value;
-  if(!sv||!ev){alert('期間を入力してください');return;}
-  const start=new Date(sv),end=new Date(ev);
-  if(end<start){alert('終了日は開始日より後にしてください');return;}
-  const daily=document.getElementById(cardId+'-daily');
-  daily.querySelectorAll('.day-card').forEach(el=>el.remove());
-  const hint=document.getElementById(cardId+'-hint');
-  if(hint) hint.style.display='none';
-  let cur=new Date(start),cnt=0;
-  while(cur<=end&&cnt<14){
-    const di=cur.getDay(), ds=fmtDate(cur), isWE=di===0||di===6;
-    const dcId=cardId+'-day-'+ds;
-    const dc=document.createElement('div');
-    dc.className='day-card';
-    const isMonday = di===1;
-    dc.innerHTML=`
-      <div class="day-header" onclick="toggleDay('${dcId}')">
-        <span class="day-name" style="color:${isWE?'#c2185b':'#333'};">${ds.replace(/-/g,'/')} (${DAYS_JP[di]}曜日)</span>
-        ${isMonday?`<span style="font-size:10px;font-weight:700;color:#fff;background:#c2185b;border-radius:10px;padding:2px 8px;margin-left:6px;white-space:nowrap;">📋 週報提出日</span>`:''}
-        <span class="day-dot" id="${dcId}-dot"></span>
-        <span class="day-arr" id="${dcId}-arr">▼</span>
-      </div>
-      <div class="day-body" id="${dcId}-body">
-        <div id="${dcId}-plans"></div>
-        <button class="btn-add-plan" onclick="addPlanItem('${dcId}-plans','${dcId}')">＋ 予定を追加</button>
-        <div class="field-label" style="margin-top:10px;">💡 気づき・学び</div>
-        <textarea class="field" id="${dcId}-note" placeholder="気づいたこと、学んだことを書こう" oninput="autoH(this)"></textarea>
-        <div class="achieve-row">
-          <span class="achieve-lbl">達成度：</span>
-          <select class="achieve-sel" id="${dcId}-ach" onchange="colorAch(this)">
-            <option value="">ー</option>
-            ${[0,10,20,30,40,50,60,70,80,90,100].map(v=>`<option value="${v}">${v}%</option>`).join('')}
-          </select>
-        </div>
-      </div>`;
-    daily.appendChild(dc);
-    addPlanItem(dcId+'-plans',dcId);
-    cur.setDate(cur.getDate()+1); cnt++;
-  }
-  shuffleMsg();
-}
-
-function addPlanItem(cid,dcId){
-  const c=document.getElementById(cid);
-  const itemId=cid+'-item-'+Date.now();
-  const d=document.createElement('div');
-  d.className='plan-item'; d.id=itemId;
-  d.innerHTML=`
-    <div class="plan-item-head">
-      <select class="plan-sel cat-sel-p" onchange="updatePlanPlt(this,'${itemId}')">
-        <option value="">カテゴリ</option>${CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('')}
-      </select>
-      <select class="plan-sel plt-sel-p" style="display:none;" id="${itemId}-plt">
-        <option value="">媒体</option>
-      </select>
-      <button class="btn-add-custom" onclick="openCustomModal(()=>syncAllSelects())" style="font-size:11px;padding:5px 8px;">＋ 新規</button>
-      <button class="btn-add-custom" style="font-size:11px;padding:5px 8px;background:#fff5f5;color:#e57373;border-color:#e57373;" onclick="openDeleteModal()">削除</button>
-      <button class="btn-remove-plan" onclick="document.getElementById('${itemId}').remove()">×</button>
-    </div>
-    <div class="field-label">📝 今日やること</div>
-    <textarea class="field" placeholder="今日の予定・取り組むことを入力" oninput="autoH(this);markFilled('${dcId}')"></textarea>`;
-  c.appendChild(d);
-  markFilled(dcId);
-}
-function updatePlanPlt(cs,itemId){
-  const ps=document.getElementById(itemId+'-plt');
-  if(!ps)return;
-  const cat=cs.value;
-  if(!cat){ps.style.display='none';return;}
-  ps.innerHTML=`<option value="">媒体</option>`+(PLATFORMS[cat]||[]).map(p=>`<option value="${p}">${p}</option>`).join('');
-  ps.style.display='block';
-}
-function refreshAllPlanRows(){
-  document.querySelectorAll('.plan-sel.cat-sel-p').forEach(cs=>{
-    if(cs.value) updatePlanPlt(cs,cs.closest('.plan-item').id);
-  });
-}
-function toggleDay(id){
-  const body=document.getElementById(id+'-body');
-  const arr=document.getElementById(id+'-arr');
-  if(!body)return;
-  const isOpen=body.classList.contains('open');
-  body.classList.toggle('open',!isOpen);
-  if(arr) arr.style.transform=isOpen?'':'rotate(180deg)';
-}
-function markFilled(id){const d=document.getElementById(id+'-dot');if(d)d.classList.add('filled');}
-function autoH(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
-function colorAch(sel){
-  const v=parseInt(sel.value);
-  if(isNaN(v)){sel.style.color='#333';return;}
-  sel.style.color=v>=80?'#388e3c':v>=50?'#f57c00':'#e57373';
-}
-
-function collectWeekData(weekCards) {
-  const allWeeks=[];
-  weekCards.forEach((wEl,wi)=>{
-    const badge=wEl.querySelector('.week-badge')?.textContent||`第${wi+1}週`;
-    const sv=wEl.querySelector('.start-date-input')?.value.replace(/-/g,'/')||'';
-    const ev=wEl.querySelector('.end-date-input')?.value.replace(/-/g,'/')||'';
-    const review=wEl.querySelector('[id$="-review"]')?.value||'';
-    const rF=wEl.querySelector('[id$="-r-follower"]')?.value||'';
-    const rL=wEl.querySelector('[id$="-r-line"]')?.value||'';
-    const rA=wEl.querySelector('[id$="-r-apply"]')?.value||'';
-    const rS=wEl.querySelector('[id$="-r-sales"]')?.value||'';
-    const goals=[];
-    wEl.querySelectorAll('.goal-row').forEach(gr=>{
-      const cat=gr.querySelector('.cat-sel')?.value||'';
-      const plt=gr.querySelector('.plt-sel')?.value||'';
-      const txt=gr.querySelector('.goal-text')?.value||'';
-      if(cat||txt) goals.push({cat,plt,txt});
-    });
-    const days=[];
-    wEl.querySelectorAll('.day-card').forEach(dc=>{
-      const dayName=dc.querySelector('.day-name')?.textContent||'';
-      const isWE=dc.querySelector('.day-name')?.style.color==='rgb(194, 24, 91)';
-      const note=dc.querySelector('[id$="-note"]')?.value||'';
-      const ach=dc.querySelector('.achieve-sel')?.value||'';
-      const plans=[];
-      dc.querySelectorAll('.plan-item').forEach(pi=>{
-        const cat=pi.querySelector('.cat-sel-p')?.value||'';
-        const plt=pi.querySelector('[id$="-plt"]')?.value||'';
-        const txt=pi.querySelector('textarea.field')?.value||'';
-        plans.push({cat,plt,txt});
-      });
-      days.push({dayName,isWE,note,ach,plans});
-    });
-    allWeeks.push({badge,sv,ev,goals,days,review,rF,rL,rA,rS});
-  });
-  return allWeeks;
-}
-
-function buildPDFHTML(area, allWeeks) {
-  const today=new Date().toLocaleDateString('ja-JP');
-  allWeeks.forEach((w,wi)=>{
-    const page=document.createElement('div');
-    page.className='pdf-page';
-    let html='';
-    if(wi===0){
-      html+=`<div class="pdf-doc-title"><h2>${escH(userName)}の週報</h2></div>`;
-      html+=`<div class="pdf-doc-meta">作成日：${today}</div>`;
-    } else {
-      html+=`<div style="text-align:center;font-size:14px;color:#888;margin-bottom:20px;"><strong>${escH(userName)}の週報</strong></div>`;
-    }
-    html+=`<div class="pdf-week-header"><h3>${escH(w.sv)} 〜 ${escH(w.ev)}</h3></div>`;
-    html+=`<div class="pdf-section-title">🎯 今週の目標</div>`;
-    if(w.goals.length===0||w.goals.every(g=>!g.cat&&!g.txt)){
-      html+=`<div style="font-size:11px;color:#ccc;padding:4px 6px;">（未入力）</div>`;
-    } else {
-      w.goals.forEach(g=>{
-        const tag=[g.cat,g.plt].filter(Boolean).join(' / ');
-        html+=`<div class="pdf-goal-item">`;
-        if(tag) html+=`<div class="pdf-goal-tag">${escH(tag)}</div>`;
-        html+=`<div class="pdf-goal-text">${escH(g.txt)||'（テキスト未入力）'}</div>`;
-        html+=`</div>`;
-      });
-    }
-    html+=`<div class="pdf-section-title">📆 一日ごとの予定</div>`;
-    if(w.days.length===0){
-      html+=`<div style="font-size:11px;color:#ccc;padding:4px 6px;">（日付が展開されていません）</div>`;
-    } else {
-      w.days.forEach(d=>{
-        const hasContent=d.plans.some(p=>p.txt)||d.note;
-        html+=`<div class="pdf-day-block">`;
-        html+=`<div class="pdf-day-name${d.isWE?' weekend':''}"><span>${escH(d.dayName)}</span>${d.ach?`<span class="pdf-day-ach">達成度：${escH(d.ach)}%</span>`:''}</div>`;
-        html+=`<div class="pdf-day-content">`;
-        if(hasContent){
-          d.plans.forEach(p=>{
-            if(!p.txt)return;
-            const tag=[p.cat,p.plt].filter(Boolean).join(' / ');
-            html+=`<div class="pdf-plan-row">`;
-            if(tag) html+=`<div class="pdf-plan-tag">[${escH(tag)}]</div>`;
-            html+=`<div class="pdf-plan-text">${escH(p.txt)}</div>`;
-            html+=`</div>`;
-          });
-          if(d.note){
-            html+=`<div class="pdf-note-row"><div class="pdf-note-label">💡 気づき・学び</div><div class="pdf-note-text">${escH(d.note)}</div></div>`;
-          }
-        } else {
-          html+=`<div class="pdf-no-record">（記録なし）</div>`;
-        }
-        html+=`</div></div>`;
-      });
-    }
-    html+=`<div class="pdf-section-title">💬 週全体の振り返り</div>`;
-    html+=`<div class="pdf-review-box"><div class="pdf-review-text">${escH(w.review)||'（未入力）'}</div></div>`;
-    html+=`<div class="pdf-section-title">📊 結果</div>`;
-    html+=`<div class="pdf-result-box"><div class="pdf-result-grid">`;
-    [{label:'フォロワー増減',val:w.rF,unit:'人'},{label:'LINE登録',val:w.rL,unit:'人'},{label:'申込み数',val:w.rA,unit:'件'},{label:'売上',val:w.rS,unit:'円'}].forEach(r=>{
-      const display=r.val?Number(r.val).toLocaleString()+' '+r.unit:'― '+r.unit;
-      html+=`<div class="pdf-result-cell"><div class="pdf-result-cell-label">${escH(r.label)}</div><div class="pdf-result-cell-val">${display}</div></div>`;
-    });
-    html+=`</div></div>`;
-    html+=`<div class="pdf-page-num">${wi+1}</div>`;
-    page.innerHTML=html;
-    area.appendChild(page);
-  });
-}
-
-async function buildPDFBlob(overlayText) {
-  document.querySelectorAll('.day-body').forEach(b=>b.classList.add('open'));
-  document.querySelectorAll('.day-arr').forEach(a=>a.style.transform='rotate(180deg)');
-  await wait(300);
-  const weekCards=document.querySelectorAll('.week-card');
-  const allWeeks=collectWeekData(weekCards);
-  const area=document.getElementById('pdf-print-area');
-  area.innerHTML='';
-  buildPDFHTML(area,allWeeks);
-  await wait(300);
-  const {jsPDF}=window.jspdf;
-  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const A4_W_MM=210, A4_H_MM=297;
-  const pages=area.querySelectorAll('.pdf-page');
-  for(let i=0;i<pages.length;i++){
-    if(overlayText) overlayText.textContent=`ページ ${i+1} / ${pages.length} を変換中...`;
-    // scale:2でRetina品質、windowWidthを794pxに固定して横伸びを防止
-    const canvas=await html2canvas(pages[i],{
-      scale:2,
-      useCORS:true,
-      backgroundColor:'#ffffff',
-      logging:false,
-      width:794,
-      height:1123,
-      windowWidth:794,
-      windowHeight:1123,
-      scrollX:0,
-      scrollY:0
-    });
-    const imgData=canvas.toDataURL('image/png');
-    if(i>0) pdf.addPage();
-    // A4ぴったりに収める（縦横比維持）
-    const canvasW=canvas.width/2; // scaleで2倍になっているので戻す
-    const canvasH=canvas.height/2;
-    const ratio=A4_W_MM/794; // 794px = 210mm
-    const imgH=canvasH*ratio;
-    pdf.addImage(imgData,'PNG',0,0,A4_W_MM,Math.min(imgH,A4_H_MM));
-  }
-  area.innerHTML='';
-  return pdf.output('blob');
-}
-
-async function generatePDF(){
-  const btn=document.getElementById('pdf-btn');
-  const overlay=document.getElementById('pdf-overlay');
-  const overlayText=document.getElementById('pdf-overlay-text');
-  btn.disabled=true; overlay.classList.add('show');
-  overlayText.textContent='PDFを生成しています...';
-  try {
-    const blob=await buildPDFBlob(overlayText);
-    const d=new Date();
-    const fname=`${userName}の週報_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.pdf`;
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
-    setTimeout(()=>URL.revokeObjectURL(url),3000);
-    overlayText.textContent='完成！ファイルを保存しました📎';
-    const completionMsgs=getCompletionMsg(nickname);
-    setAiriMsg(completionMsgs[Math.floor(Math.random()*completionMsgs.length)]);
-    await wait(1600);
-  } catch(e){
-    console.error(e);
-    overlayText.textContent='エラーが発生しました。';
-    await wait(2500);
-  }
-  overlay.classList.remove('show'); btn.disabled=false;
-}
-
-function escH(str){if(!str)return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
-function wait(ms){return new Promise(r=>setTimeout(r,ms));}
-
-// ── 保存（自分用コピーを作ってから使う機能）──
-function saveLocal(){
-  try{
-    const weeksEl=document.getElementById('weeks');
-    if(!weeksEl){ setAiriMsg('保存に失敗しました。'); return; }
-
-    const weeksData=[];
-    weeksEl.querySelectorAll('.week-card').forEach(wEl=>{
-      const wid=wEl.id;
-      const badge=wEl.querySelector('.week-badge')?.textContent||'';
-      const sv=wEl.querySelector('.start-date-input')?.value||'';
-      const ev=wEl.querySelector('.end-date-input')?.value||'';
-      const review=wEl.querySelector('[id$="-review"]')?.value||'';
-      const rF=wEl.querySelector('[id$="-r-follower"]')?.value||'';
-      const rL=wEl.querySelector('[id$="-r-line"]')?.value||'';
-      const rA=wEl.querySelector('[id$="-r-apply"]')?.value||'';
-      const rS=wEl.querySelector('[id$="-r-sales"]')?.value||'';
-
-      const goals=[];
-      wEl.querySelectorAll('.goal-row').forEach(gr=>{
-        const cat=gr.querySelector('.cat-sel')?.value||'';
-        const plt=gr.querySelector('.plt-sel')?.value||'';
-        const txt=gr.querySelector('.goal-text')?.value||'';
-        goals.push({cat,plt,txt});
-      });
-
-      const days=[];
-      wEl.querySelectorAll('.day-card').forEach(dc=>{
-        const dcId=dc.querySelector('.day-body')?.id?.replace('-body','')||'';
-        const dayName=dc.querySelector('.day-name')?.textContent||'';
-        const isWE=dc.querySelector('.day-name')?.style.color==='rgb(194, 24, 91)';
-        const isOpen=dc.querySelector('.day-body')?.classList.contains('open')||false;
-        const note=dc.querySelector('[id$="-note"]')?.value||'';
-        const ach=dc.querySelector('.achieve-sel')?.value||'';
-        const plans=[];
-        dc.querySelectorAll('.plan-item').forEach(pi=>{
-          const cat=pi.querySelector('.cat-sel-p')?.value||'';
-          const plt=pi.querySelector('[id$="-plt"]')?.value||'';
-          const txt=pi.querySelector('textarea.field')?.value||'';
-          plans.push({cat,plt,txt});
-        });
-        days.push({dcId,dayName,isWE,isOpen,note,ach,plans});
-      });
-
-      weeksData.push({wid,badge,sv,ev,review,rF,rL,rA,rS,goals,days});
-    });
-
-    const data={
-      userName,nickname,jobName,wc,
-      weeksData,
-      CATEGORIES:JSON.parse(JSON.stringify(CATEGORIES)),
-      PLATFORMS:JSON.parse(JSON.stringify(PLATFORMS)),
-      savedAt:new Date().toISOString()
-    };
-    localStorage.setItem('weekly_report_v8',JSON.stringify(data));
-    localStorage.setItem('weekly_report_settings',JSON.stringify({userName,nickname,jobName}));
-    setAiriMsg('保存したよ！次に開いたときも続きから入力できるよ🌸');
-  } catch(e){
-    console.error('保存エラー:',e);
-    setAiriMsg('保存に失敗しました。容量をご確認ください。');
-  }
-}
-
-// ── 読み込み（構造データから完全復元）──
-function loadLocal(){
-  try{
-    const raw=localStorage.getItem('weekly_report_v8');
-    if(!raw){ return; }
-    const data=JSON.parse(raw);
-    if(!data.userName||!data.nickname) return;
-
-    userName=data.userName; nickname=data.nickname; jobName=data.jobName||'お仕事';
-    wc=data.wc||0;
-    if(data.CATEGORIES&&Array.isArray(data.CATEGORIES)) CATEGORIES=data.CATEGORIES;
-    if(data.PLATFORMS&&typeof data.PLATFORMS==='object') PLATFORMS=data.PLATFORMS;
-
-    const weeksEl=document.getElementById('weeks');
-    if(!weeksEl||!data.weeksData) return;
-    weeksEl.innerHTML='';
-
-    data.weeksData.forEach(w=>{
-      const card=document.createElement('div');
-      card.className='week-card'; card.id=w.wid;
-      // badge番号を抽出
-      const num=w.badge.replace(/[^0-9]/g,'')||'?';
-      card.innerHTML=buildWeekHTML(w.wid,num,w.sv,w.ev);
-      weeksEl.appendChild(card);
-
-      // 目標行を復元
-      const goalRowsEl=document.getElementById(w.wid+'-goal-rows');
-      (w.goals||[]).forEach(g=>{
-        const rowId=w.wid+'-goal-rows-row-'+Date.now()+Math.random();
-        const d=document.createElement('div');
-        d.className='goal-row'; d.id=rowId;
-        d.innerHTML=buildGoalRowHTML(rowId,w.wid);
-        goalRowsEl.appendChild(d);
-        // 値を復元
-        const catSel=d.querySelector('.cat-sel');
-        const pltSel=d.querySelector('.plt-sel');
-        const goalTxt=d.querySelector('.goal-text');
-        if(catSel){ catSel.value=g.cat||''; if(g.cat) updatePlatformSel(catSel,rowId); }
-        if(pltSel && g.plt){ setTimeout(()=>{pltSel.value=g.plt;},30); }
-        if(goalTxt){ goalTxt.value=g.txt||''; autoH(goalTxt); }
-      });
-
-      // 結果を復元
-      const setV=(sel,v)=>{const el=document.querySelector(sel); if(el&&v) el.value=v;};
-      setV(`#${w.wid}-r-follower`,w.rF);
-      setV(`#${w.wid}-r-line`,w.rL);
-      setV(`#${w.wid}-r-apply`,w.rA);
-      setV(`#${w.wid}-r-sales`,w.rS);
-
-      // 振り返りを復元
-      const rv=document.getElementById(w.wid+'-review');
-      if(rv){ rv.value=w.review||''; autoH(rv); }
-
-      // 日カードを復元
-      if(w.days&&w.days.length>0){
-        const daily=document.getElementById(w.wid+'-daily');
-        const hint=document.getElementById(w.wid+'-hint');
-        if(hint) hint.style.display='none';
-
-        w.days.forEach(d=>{
-          const isWE=d.isWE;
-          const dcId=d.dcId||w.wid+'-day-'+Date.now();
-          const dc=document.createElement('div');
-          dc.className='day-card';
-          dc.innerHTML=`
-            <div class="day-header" onclick="toggleDay('${dcId}')">
-              <span class="day-name" style="color:${isWE?'#c2185b':'#333'};">${d.dayName}</span>
-              <span class="day-dot ${(d.plans||[]).some(p=>p.txt)?'filled':''}" id="${dcId}-dot"></span>
-              <span class="day-arr" id="${dcId}-arr" style="transform:${d.isOpen?'rotate(180deg)':''}">▼</span>
-            </div>
-            <div class="day-body${d.isOpen?' open':''}" id="${dcId}-body">
-              <div id="${dcId}-plans"></div>
-              <button class="btn-add-plan" onclick="addPlanItem('${dcId}-plans','${dcId}')">＋ 予定を追加</button>
-              <div class="field-label" style="margin-top:10px;">💡 気づき・学び</div>
-              <textarea class="field" id="${dcId}-note" placeholder="気づいたこと、学んだことを書こう" oninput="autoH(this)"></textarea>
-              <div class="achieve-row">
-                <span class="achieve-lbl">達成度：</span>
-                <select class="achieve-sel" id="${dcId}-ach" onchange="colorAch(this)">
-                  <option value="">ー</option>
-                  ${[0,10,20,30,40,50,60,70,80,90,100].map(v=>`<option value="${v}"${d.ach==v?' selected':''}">${v}%</option>`).join('')}
-                </select>
-              </div>
-            </div>`;
-          daily.appendChild(dc);
-
-          // ノートを復元
-          const noteEl=document.getElementById(dcId+'-note');
-          if(noteEl){ noteEl.value=d.note||''; autoH(noteEl); }
-
-          // 達成度を復元
-          const achEl=document.getElementById(dcId+'-ach');
-          if(achEl&&d.ach){ achEl.value=d.ach; colorAch(achEl); }
-
-          // 予定を復元
-          const plansEl=document.getElementById(dcId+'-plans');
-          (d.plans||[]).forEach(p=>{
-            const itemId=dcId+'-plans-item-'+Date.now()+Math.random();
-            const pi=document.createElement('div');
-            pi.className='plan-item'; pi.id=itemId;
-            const catOpts=CATEGORIES.map(c=>`<option value="${c}"${p.cat===c?' selected':''}>${c}</option>`).join('');
-            pi.innerHTML=`
-              <div class="plan-item-head">
-                <select class="plan-sel cat-sel-p" onchange="updatePlanPlt(this,'${itemId}')">
-                  <option value="">カテゴリ</option>${catOpts}
-                </select>
-                <select class="plan-sel plt-sel-p" id="${itemId}-plt" style="display:${p.cat?'block':'none'};">
-                  <option value="">媒体</option>
-                  ${(PLATFORMS[p.cat]||[]).map(pl=>`<option value="${pl}"${p.plt===pl?' selected':''}>${pl}</option>`).join('')}
-                </select>
-                <button class="btn-add-custom" onclick="openCustomModal(()=>refreshAllPlanRows())" style="font-size:11px;padding:5px 8px;">＋ 新規</button>
-                <button class="btn-remove-plan" onclick="document.getElementById('${itemId}').remove()">×</button>
-              </div>
-              <div class="field-label">📝 今日やること</div>
-              <textarea class="field" placeholder="今日の予定・取り組むことを入力" oninput="autoH(this);markFilled('${dcId}')">${p.txt||''}</textarea>`;
-            plansEl.appendChild(pi);
-            const ta=pi.querySelector('textarea.field');
-            if(ta) autoH(ta);
-          });
-        });
-      }
-    });
-    console.log('✓ データ読み込み完了:',data.savedAt);
-  } catch(e){
-    console.error('読み込みエラー:',e);
-  }
-}
-
-document.getElementById('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nickname-input').focus();});
-document.getElementById('nickname-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('job-input').focus();});
-document.getElementById('job-input').addEventListener('keydown',e=>{if(e.key==='Enter')startApp();});
-
-// ── 200パターン以上の励ましメッセージ ──
-function getRichMsg(name){
-  const all=[
-    // 朝の挨拶系
-    `${name}、おはよう！今日も最高の一日にしよう🌅`,
-    `${name}、朝から動いてるあなたが大好きだよ☀️`,
-    `${name}、今日という日は今日しかない。全力でいこう🌸`,
-    `${name}、朝の静けさに感謝して、今日も一歩踏み出そう🍀`,
-    `${name}、昨日よりちょっとだけ前に進めばそれで十分だよ✨`,
-    // 行動力を褒める
-    `${name}、動いてる人だけが見える景色がある。あなたはもうそこにいるよ🌟`,
-    `${name}、記録するって地味に見えて、実は一番強い武器だよ💪`,
-    `${name}、やると決めて動いてるあなた、本当にかっこいい！`,
-    `${name}、行動できる人って実はすごく少ない。あなたはその一人だよ🌺`,
-    `${name}、一歩踏み出すことの大切さ、あなたは知ってるよね✨`,
-    `${name}、動いてる人のところに、チャンスは必ずやってくるよ🎯`,
-    `${name}、今日動いた分が、明日の結果になるんだよ💫`,
-    `${name}、小さな行動の積み重ねが、大きな変化を生むんだよ🌱`,
-    `${name}、やり続けることが一番強い。あなたはそれを知ってる！`,
-    `${name}、今日の努力は絶対に未来の自分への贈り物になるよ🎁`,
-    // 継続を褒める
-    `${name}、続けることができる人って、本当に少ないんだよ。あなたはすごい！🌸`,
-    `${name}、コツコツ続けてる姿、本当に輝いてるよ✨`,
-    `${name}、続けることが才能だとしたら、あなたは天才だよ！💕`,
-    `${name}、毎週記録してるあなた、その習慣が最強の財産だよ🏆`,
-    `${name}、継続は力なりって言葉、あなたのためにあるんだと思う💪`,
-    `${name}、諦めずに続けてる、それだけで十分すごいんだよ🌟`,
-    `${name}、続けてる人だけが辿り着ける場所がある。あなたはそこに向かってる！`,
-    `${name}、一週間ずつ積み上げてるあなたの記録、宝物だよ📚`,
-    `${name}、コツコツやってる人が最後に笑うって、本当のことだよ😊`,
-    `${name}、今日も来てくれた。それだけで十分うれしいよ🌸`,
-    // 自信を持たせる
-    `${name}、あなたには可能性しかないよ！本当に🌟`,
-    `${name}、自分を信じて進んでいいよ。絶対に大丈夫だから💕`,
-    `${name}、あなたが思ってるより、あなたはずっとすごいよ✨`,
-    `${name}、自分の力を疑わなくていい。積み上げてきたものは消えないよ💪`,
-    `${name}、あなたの直感、信じていいよ。それが正解だから🌸`,
-    `${name}、もっと自分のこと好きになっていいよ。十分素敵だから💎`,
-    `${name}、あなたが思う「できない」は、まだやってないだけだよ🎯`,
-    `${name}、失敗しても大丈夫。また立ち上がれる力があるって知ってるから💪`,
-    `${name}、あなたの価値は結果だけじゃない。挑戦してること自体がすごいよ🌺`,
-    `${name}、比べなくていいよ。あなたはあなたのペースで十分輝いてる✨`,
-    // 目標・夢について
-    `${name}、夢を持ってる人は、それだけで強いよ🌟`,
-    `${name}、目標を書いた瞬間から、引き寄せが始まってるよ💫`,
-    `${name}、夢に向かって進んでるあなた、応援してる！🌸`,
-    `${name}、なりたい自分に近づいてる。確実に、一歩ずつ🚶`,
-    `${name}、目標があると、毎日の意味が変わるよね。あなたはそれを知ってる！`,
-    `${name}、大きな夢を持つことを恐れなくていいよ💕`,
-    `${name}、今日の記録が、夢への地図になるよ🗺️`,
-    `${name}、諦めなければ、夢は必ず現実になるよ🌈`,
-    `${name}、あなたの夢、絶対に叶うよ。信じてるから💪`,
-    `${name}、目標に向かって走ってるあなた、本当にかっこいいよ✨`,
-    // 仕事・成果について
-    `${name}、仕事に誇りを持てるって、最高に幸せなことだよ🌸`,
-    `${name}、あなたの仕事が誰かの役に立ってる。絶対にそうだよ💕`,
-    `${name}、成果は必ず出る。行動し続けてるんだから🌟`,
-    `${name}、結果が出なくても、プロセスがあなたを成長させてるよ✨`,
-    `${name}、仕事を楽しめてる人は最強だよ！🏆`,
-    `${name}、あなたの頑張りは、絶対に誰かに届いてるよ💫`,
-    `${name}、今週の頑張り、全部見えてるよ。本当によくやってる！💪`,
-    `${name}、結果より大切なのは、諦めないこと。あなたはそれができてる🌺`,
-    `${name}、失敗は次の成功への道しるべだよ。怖くない！🎯`,
-    `${name}、うまくいかない日があってもいい。それも経験だから🍀`,
-    // SNS・発信について
-    `${name}、発信することで世界が広がる。あなたはそれを知ってる！🌐`,
-    `${name}、あなたの言葉を待ってる人がいるよ。発信し続けて💕`,
-    `${name}、コンテンツを作り続けてる人が最後に勝つよ💪`,
-    `${name}、フォロワーより大切なのは、発信の質と継続。あなたはどちらも持ってる！✨`,
-    `${name}、今日の発信が、誰かの人生を変えるかもしれないよ🌟`,
-    `${name}、SNSは数字より繋がりだよ。あなたの発信は心に届いてる💫`,
-    `${name}、発信を続けることは、最強のマーケティングだよ🎯`,
-    `${name}、あなたの体験談は、誰かにとっての希望だよ🌸`,
-    `${name}、続けた人だけが見えてくる景色がある。もうすぐそこだよ！🌈`,
-    `${name}、今日の発信が積み重なって、信頼になるんだよ💎`,
-    // 集客・ビジネスについて
-    `${name}、集客は種まき。今日の行動が実になる日が必ず来るよ🌱`,
-    `${name}、お客さんはあなたを待ってるよ。出会いに行こう！💕`,
-    `${name}、価値を伝え続けた人のところに、人は集まるよ🌟`,
-    `${name}、あなたのサービスを必要としてる人がいる。絶対に🌸`,
-    `${name}、ビジネスは信頼の積み重ね。あなたは確実に積んでるよ✨`,
-    `${name}、今日のアクションが、来月の結果に繋がるよ📈`,
-    `${name}、あなたのことを知らない人はまだいっぱいいる。発信し続けよう💪`,
-    `${name}、お客さんに喜んでもらえる時間、最高だよね🎉`,
-    `${name}、あなたのファンは必ずいる。まだ出会ってないだけだよ💕`,
-    `${name}、数字を追うより、目の前の一人に全力で。それが結果に繋がるよ🌺`,
-    // メンタル・心の強さ
-    `${name}、うまくいかない日も、成長してる日だよ🌱`,
-    `${name}、落ち込む時間より、次の一手を考える時間に使おう💪`,
-    `${name}、比較しなくていい。あなたはあなたの道を歩いてる🌸`,
-    `${name}、誰かと違っていい。それがあなたの個性だから✨`,
-    `${name}、完璧じゃなくていい。進んでることが大事だよ💕`,
-    `${name}、疲れたら休んでいいよ。また動き出せるから🌙`,
-    `${name}、今の自分を責めなくていい。よくやってるよ🌸`,
-    `${name}、心が折れそうな時こそ、記録が支えてくれるよ📝`,
-    `${name}、焦らなくていい。あなたのペースが一番大事だよ🍀`,
-    `${name}、今日できたことに目を向けよう。それが前進だから✨`,
-    // 仲間・応援
-    `${name}、遠くから全力で応援してるよ！届いてる？📣`,
-    `${name}、一人じゃないよ。一緒に頑張ろうね💕`,
-    `${name}、あなたの頑張りを見てる人がいる。ひとりじゃないよ🌸`,
-    `${name}、応援してるよ。心の底から本当に🌟`,
-    `${name}、あなたが頑張ってること、ちゃんと伝わってるよ✨`,
-    `${name}、諦めないで。一緒に前に進もうよ💪`,
-    `${name}、あなたの挑戦を、ずっと応援してるからね🌺`,
-    `${name}、うまくいった時も、うまくいかない時も、ここにいるよ💕`,
-    `${name}、頑張ってる姿、かっこいいよ。本当に🌸`,
-    `${name}、あなたが笑顔でいられるように、応援してる😊`,
-    // 未来・可能性
-    `${name}、今日より明日のあなたは、もっと輝いてるよ🌟`,
-    `${name}、可能性は無限大。あなたの未来、楽しみだな💫`,
-    `${name}、今の積み重ねが、必ず未来を変えるよ🌱`,
-    `${name}、半年後の自分が、今日の選択に感謝するよ🎯`,
-    `${name}、なりたい自分に近づいてる実感、大事にしてね💕`,
-    `${name}、未来のあなたは、今のあなたを誇りに思うよ🌸`,
-    `${name}、今日の一歩が、一年後の大きな差になるよ✨`,
-    `${name}、可能性の扉は、動いた人にだけ開くんだよ🚪`,
-    `${name}、あなたの未来、絶対に明るいよ。信じてる💪`,
-    `${name}、夢への道は長いかもしれないけど、あなたなら絶対に辿り着ける🌈`,
-    // 季節・日常
-    `${name}、今日も生きてるだけで最高だよ。それプラスで頑張ってるんだもん🌸`,
-    `${name}、深呼吸して。それだけで少し楽になるよ💨`,
-    `${name}、今日も笑顔で過ごせてる？あなたの笑顔が一番素敵だよ😊`,
-    `${name}、好きなもの食べた？好きなことした？自分を大事にしてね💕`,
-    `${name}、一日の終わりに、今日も頑張ったねって自分に言ってあげてね🌙`,
-    `${name}、昨日より少しでも前に進んだら、それは大成功だよ🏆`,
-    `${name}、今日も生きることに全力で。それがあなたの輝きだよ✨`,
-    `${name}、どんな一日も、あなたの物語の大事な一ページだよ📖`,
-    `${name}、今日という日は、もう二度と来ない特別な日だよ🌟`,
-    `${name}、今日の自分に花まるをあげてね。よく頑張ってるよ🌸`,
-    // ユニーク・面白い
-    `${name}、週報書いてる自分、好きでしょ？正解！かっこいいよ😄`,
-    `${name}、こんなにちゃんと管理できる人、なかなかいないよ！🌟`,
-    `${name}、週報を続けてる時点で、すでに上位数%の人だよ！✨`,
-    `${name}、記録魔のあなたが大好き。データは嘘をつかないからね📊`,
-    `${name}、今週もやると決めた自分を信じよう。決めた時点でもう半分成功してるよ🎯`,
-    `${name}、完璧を目指すより、続けることを選んでるあなた、賢いよ💡`,
-    `${name}、迷ったら書く。書いたら動く。動いたら変わる。それがあなた！💪`,
-    `${name}、もう習慣になってるね！習慣は最強の武器だよ🏆`,
-    `${name}、こうやって毎週記録してる人が成功する、それが法則だよ📈`,
-    `${name}、今日の記録が、将来の講座のネタになるかもね🎤`,
-    // 感謝・特別感
-    `${name}、あなたがいてくれるだけで、世界が明るくなるよ🌟`,
-    `${name}、あなたのことが大好きだよ。本当に💕`,
-    `${name}、あなたの存在が誰かを幸せにしてるよ、知ってた？🌸`,
-    `${name}、あなたに出会えてよかった。素敵な人だよ✨`,
-    `${name}、あなたみたいな人がいると、周りが明るくなるよね💫`,
-    `${name}、あなたのエネルギー、いつも素敵だよ！🌺`,
-    `${name}、生き方がかっこいいよ。本当に尊敬する💎`,
-    `${name}、あなたの熱量、絶対に伝わってるよ🔥`,
-    `${name}、信念を持って進んでるあなた、最高にかっこいい💪`,
-    `${name}、あなたの頑張り、無駄になることなんて絶対にないよ🌸`,
-    // 短くてパワフル
-    `${name}、絶対できる！🌟`,
-    `${name}、今日もファイト！💪`,
-    `${name}、最高の一日にしよう🌸`,
-    `${name}、あなたなら大丈夫！✨`,
-    `${name}、輝いてるよ！💫`,
-    `${name}、進んでる！止まらないで🏃`,
-    `${name}、今日も最高！💕`,
-    `${name}、負けないよ！一緒に🌺`,
-    `${name}、前向きが最強！💪`,
-    `${name}、信じて進もう🌈`,
-    // 深い言葉系
-    `${name}、種を蒔いた人だけが、花を咲かせられるよ🌸`,
-    `${name}、今日の努力は、必ず見えない貯金になってるよ💰`,
-    `${name}、成功とは、諦めなかった人のことだよ。あなたはそれ💪`,
-    `${name}、人生は今日の積み重ね。あなたは今日も積み上げてる🌟`,
-    `${name}、やりたいことがある人生は、それだけで素晴らしいよ💕`,
-    `${name}、挑戦してる姿が、周りの誰かの勇気になってるよ✨`,
-    `${name}、今の不安は、成長の証だよ。怖くない！🌱`,
-    `${name}、一番大切なのは、昨日の自分より前に進んでること。あなたはそれができてる🎯`,
-    `${name}、人生で一番後悔することは、やらなかったこと。あなたはやってる！💎`,
-    `${name}、今日という日に感謝して、全力で生きよう🌸`,
-    // 業務・計画
-    `${name}、計画した人が結果を出すんだよ。あなたはすでにやってる📋`,
-    `${name}、週報をつけてる人は、目標達成率が3倍になるって知ってた？📈`,
-    `${name}、書くことで頭が整理される。あなたは毎週それをやってる、賢い！💡`,
-    `${name}、PDCAを回してる人が強い。あなたはそれをやってるよ🔄`,
-    `${name}、数字で管理できる人は、結果を出せる人だよ。あなたはそれ！📊`,
-    `${name}、計画と実行と振り返り。この3つができてるあなたは最強！💪`,
-    `${name}、今週の目標、ちゃんと書いた？書いたら達成確率が上がるよ🎯`,
-    `${name}、振り返ることができる人は、確実に成長してるよ🌱`,
-    `${name}、月曜日から計画できる人って、実は少ないよ。すごい！✨`,
-    `${name}、記録は宝。後で見返した時に、絶対にあってよかったと思うよ📚`,
-    // リラックス・休息
-    `${name}、疲れたら休んでいいよ。休むことも仕事だから🛋️`,
-    `${name}、深呼吸、忘れてない？ゆっくり吸って、ゆっくり吐いて💨`,
-    `${name}、今日は少し自分を甘やかしてもいいよ🍰`,
-    `${name}、休憩は怠けじゃないよ。次へのエネルギー充電だよ⚡`,
-    `${name}、無理しすぎてない？自分のペースが一番大事だよ🌸`,
-    `${name}、完璧より、継続。あなたはそれを知ってるよね💕`,
-    `${name}、今日うまくいかなくても、明日がある。大丈夫！🌅`,
-    `${name}、自分に優しくできる人が、周りにも優しくできるよ💕`,
-    `${name}、今日は頑張りすぎてない？少しゆっくりしてね🌙`,
-    `${name}、体が資本だよ。健康でいてくれることが一番うれしい🌸`,
-  ];
-  // 毎回違う順番で返す（使用済みトラッキング）
-  if(!getRichMsg._used) getRichMsg._used=[];
-  if(getRichMsg._used.length>=all.length) getRichMsg._used=[];
-  const remaining=all.filter((_,i)=>!getRichMsg._used.includes(i));
-  const idx=all.indexOf(remaining[Math.floor(Math.random()*remaining.length)]);
-  getRichMsg._used.push(idx);
-  return all[idx];
-}
-
-window.addEventListener('load',()=>{
-  try{
-    const savedSettings=localStorage.getItem('weekly_report_settings');
-    const savedData=localStorage.getItem('weekly_report_v8');
-    if(savedSettings&&savedData){
-      const s=JSON.parse(savedSettings);
-      userName=s.userName||''; nickname=s.nickname||''; jobName=s.jobName||'お仕事';
-      if(userName&&nickname){
-        document.getElementById('setup-modal').style.display='none';
-        document.getElementById('main-app').style.display='block';
-        document.getElementById('main-title').textContent=userName+'の週報';
-        document.title=userName+'の週報';
-        setAiriMsg(jobPraise(jobName,nickname));
-        setInterval(()=>{
-          const el=document.getElementById('airi-msg');
-          if(!el)return;
-          el.style.opacity='0';
-          setTimeout(()=>{el.textContent=getRichMsg(nickname);el.style.opacity='1';},400);
-        },30000);
-        appStarted=true;
-        setTimeout(()=>{
-          loadLocal();
-          const weeksEl=document.getElementById('weeks');
-          if(!weeksEl||weeksEl.children.length===0) addWeek();
-        },300);
-        return;
-      }
-    }
-  }catch(e){}
-  // 保存データなし → 空のモーダル表示
-  document.getElementById('setup-modal').style.display='flex';
-  document.getElementById('main-app').style.display='none';
-});
 </script>
 </body>
 </html>
