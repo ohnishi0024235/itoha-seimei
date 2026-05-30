@@ -582,6 +582,19 @@ function showTable(t){
   document.getElementById('tbadge').textContent=LBL[t];
   updateGbadge();
   render(t);
+  // 三才パネルを空白に
+  ['st','sj','sc'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent='—';e.className='spv';e.style.color='';}});
+  const htEl=document.getElementById('sp-hantei');if(htEl){htEl.textContent='—';htEl.style.color='';}
+  const kkEl=document.getElementById('sp-kk');if(kkEl){kkEl.textContent='—';kkEl.style.color='';}
+  const relTJ=document.getElementById('sp-rel-tj');if(relTJ){relTJ.textContent='—';relTJ.style.color='';}
+  const relJC=document.getElementById('sp-rel-jc');if(relJC){relJC.textContent='—';relJC.style.color='';}
+  // バランス判定を空白に
+  ['bl-sansai-kk','bl-sansai-desc','bl-yy-kk','bl-yy-desc','bl-ot-kk','bl-ot-desc'].forEach(id=>{
+    const e=document.getElementById(id);if(e){e.innerHTML='—';}
+  });
+  const blEl=document.getElementById('bl-balance-kk');if(blEl){blEl.innerHTML='—';blEl.style.color='';}
+  // 吉凶判定をクリア
+  clearKK();
   window.scrollTo({top:0,behavior:'instant'});
 }
 function resetInputs(){
